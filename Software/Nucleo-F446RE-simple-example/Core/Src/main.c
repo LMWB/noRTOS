@@ -13,6 +13,13 @@
  * in the root directory of this software component.
  * If no LICENSE file comes with this software, it is provided AS-IS.
  *
+ *
+ * This is a simple project on how to use the noRTOS Api. It requires a STM32 Nucleo Board in default configuration.
+ * Any Nucleo Board will work since there is no external hardware  involved (shields, extensions etc.).
+ * The only components used in this demo are the onboard green LED, blue push button and UART2 as a serial terminal (printf).
+ *
+ *
+ *
  ******************************************************************************
  */
 /* USER CODE END Header */
@@ -115,6 +122,14 @@ int main(void) {
 		}
 	}
 
+	void timing(void) {
+		static uint32_t time_stamp_last_call = 0;
+		uint32_t now = NORTOS_SCHEDULAR_GET_TICK();
+		printf("differnce from now to previous call is %ld ms\n",
+				(now - time_stamp_last_call));
+		time_stamp_last_call = now;
+	}
+
 	void test_callback1(void) {
 		printf("Testing printf with _write() override\n\n");
 	}
@@ -136,6 +151,9 @@ int main(void) {
 
 	noRTOS_task_t heartbeat = { .delay = eNORTOS_PERIODE_1s, .task_callback = blinky };
 	noRTOS_add_task_to_scheduler(&heartbeat);
+
+	noRTOS_task_t task_timing = { .delay = eNORTOS_PERIODE_500milli, .task_callback = timing };
+	noRTOS_add_task_to_scheduler(&task_timing);
 
 	noRTOS_task_t test_task1 = { .delay = eNORTOS_PERIODE_1s, .task_callback = test_callback1 };
 	noRTOS_add_task_to_scheduler(&test_task1);
