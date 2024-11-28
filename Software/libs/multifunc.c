@@ -18,9 +18,11 @@ const uint8_t SEGMENT_MAP_ALPH[] 	= {
 
 
 const uint8_t SEGEMNT_SELECT[] 		= {0x10, 0x20, 0x40, 0x80};
-volatile uint8_t display_Memory[4]	= {'-', ' ', '_', '.'};
+volatile uint8_t display_Memory[4]	= {' ', ' ', ' ', ' '};
 
-void mf_delay(void)
+
+
+static void mf_delay(void)
 {
 	const uint8_t counts = 3;
 	/* create a very stupid delay (blocking) */
@@ -29,71 +31,6 @@ void mf_delay(void)
 	{
 		i++;
 	}
-}
-
-/* Multiplexing through all four parts of the 7-segment display
- * this function should be called with high period
- */
-void mf_refresh_segment(void)
-{
-	static uint8_t current_display = 0;
-
-	char data = display_Memory[current_display];
-
-	mf_write_char(current_display, data);
-
-	current_display+=1;
-	if(current_display>=4)
-	{
-		current_display = 0;
-	}
-}
-
-void mf_write_to_display_memory(const uint8_t segment, char data)
-{
-	display_Memory[segment] = data;
-}
-
-
-/* Shift Register */
-static void mf_rising_latch_serial_data_pin(void)
-{
-	SHCP_PIN_LOW();
-
-	SHCP_PIN_HIGH();
-	mf_delay();
-	SHCP_PIN_LOW();
-}
-
-/* Output register */
-static void mf_rising_latch_serial_store_pin(void)
-{
-	STCP_PIN_LOW();
-
-	STCP_PIN_HIGH();
-	mf_delay();
-	STCP_PIN_LOW();
-}
-
-
-static void mf_shift_data(const uint16_t data) {
-	uint16_t dummy_word = data;
-
-	for (uint_fast16_t i = 16; i > 0; i--) {
-		// put one bit and one bit only to DS pin
-		HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, dummy_word & 0x1);
-
-		// clock data into shift register
-		mf_rising_latch_serial_data_pin();
-
-		// right shift
-		dummy_word = dummy_word >> 1;
-	}
-}
-
-char mf_uint_to_hex(uint8_t uint)
-{
-	return SEGMENT_MAP_HEX[uint];
 }
 
 static uint8_t mf_ascii_to_segment_value(uint8_t ascii) {
@@ -133,17 +70,43 @@ static uint8_t mf_ascii_to_segment_value(uint8_t ascii) {
 	return segmentValue;
 }
 
-void mf_reset_display(void)
+/* Shift Register */
+static void mf_rising_latch_serial_data_pin(void)
 {
-	/* delete all date in shift register and put in on output */
-	mf_shift_data(0x0000);
+	SHCP_PIN_LOW();
 
-	// put shift register content to output register
-	mf_rising_latch_serial_store_pin();
+	SHCP_PIN_HIGH();
+	mf_delay();
+	SHCP_PIN_LOW();
+}
+
+/* Output register */
+static void mf_rising_latch_serial_store_pin(void)
+{
+	STCP_PIN_LOW();
+
+	STCP_PIN_HIGH();
+	mf_delay();
+	STCP_PIN_LOW();
 }
 
 
-void mf_write_char(const uint8_t segment, char data)
+static void mf_shift_data(const uint16_t data) {
+	uint16_t dummy_word = data;
+
+	for (uint_fast16_t i = 16; i > 0; i--) {
+		// put one bit and one bit only to DS pin
+		HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, dummy_word & 0x1);
+
+		// clock data into shift register
+		mf_rising_latch_serial_data_pin();
+
+		// right shift
+		dummy_word = dummy_word >> 1;
+	}
+}
+
+static void mf_write_char(const uint8_t segment, char data)
 {
 	// segment 0..3
 
@@ -153,6 +116,49 @@ void mf_write_char(const uint8_t segment, char data)
 	// put shift register content to output register
 	mf_rising_latch_serial_store_pin();
 }
+
+static void mf_refresh_segment(uint8_t segment){
+	uint8_t s = segment&0x03; // only 0..3 allowed
+	char data = display_Memory[s];
+	mf_write_char(s, data);
+}
+
+/* Multiplexing through all four parts of the 7-segment display
+ * this function should be called with high period
+ */
+void mf_refresh_display(void)
+{
+	static uint8_t current_segment = 0;
+	mf_refresh_segment(current_segment);
+
+	current_segment+=1;
+	if(current_segment>=4)
+	{
+		current_segment = 0;
+	}
+}
+
+void mf_write_to_display_memory(const uint8_t segment, char data)
+{
+	display_Memory[segment] = data;
+}
+
+char mf_uint_to_hex(uint8_t uint)
+{
+	return SEGMENT_MAP_HEX[uint];
+}
+
+
+
+void mf_reset_display(void)
+{
+	/* delete all date in shift register and put in on output */
+	mf_shift_data(0x0000);
+
+	// put shift register content to output register
+	mf_rising_latch_serial_store_pin();
+}
+
 
 void mf_demo_segment(void) {
 

@@ -43,20 +43,11 @@
 
 
 void mf_reset_display(void);
-void mf_refresh_segment(void);
+void mf_refresh_display(void);
+
 void mf_demo_segment(void);
 void mf_write_to_display_memory(const uint8_t segment, char data);
 
 char mf_uint_to_hex(uint8_t uint);
-
-/* make this one static and move it to multifunc.c */
-void mf_write_char(const uint8_t segment, char data);
-
-void mf_delay(void);
-
-
-
-
-
 
 #endif /* MUTIFUNCSHIELD_MULTIFUNC_H_ */

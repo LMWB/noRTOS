@@ -13,6 +13,7 @@
 typedef void(*VoidFunctionPointer)(void);
 
 typedef enum {
+	eNORTOS_PERIODE_5milli 		= 5,
 	eNORTOS_PERIODE_10milli 	= 10,
 	eNORTOS_PERIODE_100milli 	= 100,
 	eNORTOS_PERIODE_500milli 	= 500,

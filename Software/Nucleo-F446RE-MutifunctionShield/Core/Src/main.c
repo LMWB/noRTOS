@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -25,12 +25,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "app.h"
-#include "simpleOS.h"
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
+#include "noRTOS.h"
+#include "multifunc.h"
+static uint8_t global_button_state = 0;
+static bool global_button_event = false;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,6 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -97,28 +96,129 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
+	void read_button_state(void) {
+		uint8_t button = 0;
+		button |= MF_BUTTON_1_READ() << 0;
+		button |= MF_BUTTON_2_READ() << 1;
+		button |= MF_BUTTON_3_READ() << 2;
 
-#define DELAY_TIME_MS 2
+		/* invert button state and mask to 3 bits since buttons are low active */
+		button = ~button & 0x07;
+		if (button != global_button_state) {
+			global_button_state = button;
+			global_button_event = true;
+		}
+	}
 
-  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET); // LED off
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET); // LED off
-  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET); // LED off
-  HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_SET); // LED off
+	void inter_task_communication(void) {
+		if (global_button_event) {
+			global_button_event = false;
+			if(global_button_state != 0){
+				printf("Button got pressed\n");
+			}else if (global_button_state == 0) {
+				printf("Button got released\n");
+			}
+		}
 
-  HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, GPIO_PIN_SET); // Sound off
+		if(global_button_state & 0x01){
+			MF_BEEP_ON();
+		}else{
+			MF_BEEP_OFF();
+		}
+	}
+
+	void test_callback1(void) {
+		printf("Button state %d\n\n", global_button_state);
+	}
+
+	void test_callback2(void) {
+		printf("\tHello World Task 2\n");
+	}
+
+	void demo_seven_segment(void){
+		static uint8_t cnt;
+		mf_write_to_display_memory(0, mf_uint_to_hex(cnt));
+		mf_write_to_display_memory(3, mf_uint_to_hex(cnt));
+		cnt+=1;
+		if(cnt>=16)
+		{
+			cnt = 0;
+		}
+	}
+
+	void refresh_gui(void){
+		mf_refresh_display();
+	}
+
+	void demo_led(void) {
+		static uint8_t state = 0;
+		static uint8_t shift = 1;
+		if (state == 0) {
+			shift = shift << 1;
+			if(shift == 8) state = 1;
+		} else {
+			shift = shift >> 1;
+			if(shift == 1) state = 0;
+		}
+		switch (shift) {
+		case 1:
+			MF_LED1_turn_on();
+			MF_LED2_turn_off();
+			MF_LED3_turn_off();
+			MF_LED4_turn_off();
+			break;
+		case 2:
+			MF_LED1_turn_off();
+			MF_LED2_turn_on();
+			MF_LED3_turn_off();
+			MF_LED4_turn_off();
+			break;
+		case 4:
+			MF_LED1_turn_off();
+			MF_LED2_turn_off();
+			MF_LED3_turn_on();
+			MF_LED4_turn_off();
+			break;
+		case 8:
+			MF_LED1_turn_off();
+			MF_LED2_turn_off();
+			MF_LED3_turn_off();
+			MF_LED4_turn_on();
+			break;
+		default:
+			break;
+		}
+	}
 
 
-  /* Reset 7 Segment Display */
-  mf_reset_display();
-  HAL_Delay(DELAY_TIME_MS);
-  //mf_demo_segment();
 
-  simpleOS_init();
+	noRTOS_task_t button = { .delay = eNORTOS_PERIODE_10milli, .task_callback = read_button_state };
+	noRTOS_add_task_to_scheduler(&button);
 
-//  BEEP_ON();
-//  HAL_Delay(200);
-//  BEEP_OFF();
+	noRTOS_task_t refresh_gui_t = { .delay = eNORTOS_PERIODE_5milli, .task_callback = refresh_gui };
+	noRTOS_add_task_to_scheduler(&refresh_gui_t);
 
+	noRTOS_task_t test_task1 = { .delay = eNORTOS_PERIODE_1s, .task_callback = test_callback1 };
+	noRTOS_add_task_to_scheduler(&test_task1);
+
+	noRTOS_task_t test_task2 = { .delay = eNORTOS_PERIODE_5s, .task_callback = test_callback2 };
+	noRTOS_add_task_to_scheduler(&test_task2);
+
+	noRTOS_task_t test_task3 = { .delay = eNORTOS_PERIODE_100milli, .task_callback = inter_task_communication };
+	noRTOS_add_task_to_scheduler(&test_task3);
+
+	noRTOS_task_t gui = { .delay = eNORTOS_PERIODE_1s, .task_callback = demo_seven_segment };
+	noRTOS_add_task_to_scheduler(&gui);
+
+	noRTOS_task_t demo_led_t = { .delay = eNORTOS_PERIODE_500milli, .task_callback = demo_led };
+	noRTOS_add_task_to_scheduler(&demo_led_t);
+
+	/* init hardware */
+	mf_reset_display();
+	//mf_demo_segment();
+
+	/* this runs for ever */
+	noRTOS_run_schedular();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -128,10 +228,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-	  simpleOS_demo();
-	  HAL_Delay(DELAY_TIME_MS);
-
+	  printf("hello multi-function shield\n");
+	  MF_LED1_toggle();
+	  MF_LED2_toggle();
+	  MF_LED3_toggle();
+	  MF_LED4_toggle();
+	  DELAY(200);
   }
   /* USER CODE END 3 */
 }
@@ -184,134 +286,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	static uint8_t cnt = 0;
-
-	switch (GPIO_Pin) {
-
-	case S3_Pin:
-		//HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		break;
-
-	case S1_Pin:
-		//HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-		mf_write_to_display_memory(1, mf_uint_to_hex(cnt));
-		cnt+=1;
-		if(cnt>=16)
-		{
-			cnt = 0;
-		}
-		break;
-
-	case S2_Pin:
-		//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-		break;
-
-	case B1_Pin:
-		break;
-
-	default:
-		break;
-	}
-}
-
-void simpleOS_callback_01(void) {
-//	HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET); // LED on
-//	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-//	HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-//	HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_SET);
-//	HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-	//LED1_TOGGLE();
-	mf_refresh_segment();
-}
-
-void simpleOS_callback_05(void) {
-
-	// reset timer 6 to 0
-	__HAL_TIM_SET_COUNTER(&htim6, 0);
-
-	// start timer 6 for executing measurement
-	HAL_TIM_Base_Start(&htim6);
-
-	// execute task
-	app_FSM_SEGMENT_1_counter();
-	for (uint_fast32_t i=0; i<1e3; i++) __NOP();
-
-	// stop timer 6 for executing measurement
-	HAL_TIM_Base_Stop(&htim6);
-
-	periodic_task_set_exe_time_us(__HAL_TIM_GET_COUNTER(&htim6), pTask5_nmb);
-}
-
-void simpleOS_callback_06(void)
-{
-	simpleOS_measure_exe_time_tic(pTask6_nmb);
-
-	app_FSM_SEGMENT_2_counter();
-
-	simpleOS_measure_exe_time_toc(pTask6_nmb);
-}
-
-void simpleOS_callback_07(void) {
-	//app_FSM_LED_bin_cunter();
-	app_FSM_LED_snake();
-	//app_FSM_LED_knightrider();
-}
-
-static volatile float var1 = 0.0;
-static volatile float var2 = 0.0;
-static volatile float var3 = 0.0;
-static volatile float var4 = 0.0;
-
-void simpleOS_callback_08(void) {
-	// do some heavy calculation for testing
-
-	simpleOS_measure_exe_time_tic(pTask8_nmb);
-
-	const float a = -7.3496;
-	const float b = 20.86;
-	static float count = 0.000;
-	float x = count;
-
-	var1 = powf(3.14159, count);
-	var2 = powf(2.0, count);
-	var3 = a*x + b;
-	count = count + 0.001;
-
-	simpleOS_measure_exe_time_toc(pTask8_nmb);
-}
-
-void simpleOS_callback_09(void) {
-
-	// report infor to console
-
-	char buf[64] = {0};
-	uint16_t sz = strlen(buf);
-
-	sz = sprintf(buf, "task 1 exe time: %ld us cyc time: %ld us\r\n", periodic_task_get_exe_time_us(pTask1_nmb), periodic_task_get_cyc_time_us(pTask1_nmb));
-	HAL_UART_Transmit(&huart2, (uint8_t*)buf, sz, 10);
-
-	sz = sprintf(buf, "task 5 exe time: %ld us cyc time: %ld us\r\n", periodic_task_get_exe_time_us(pTask5_nmb), periodic_task_get_cyc_time_us(pTask5_nmb));
-	HAL_UART_Transmit(&huart2, (uint8_t*)buf, sz, 10);
-
-	sz = sprintf(buf, "task 6 exe time: %ld us cyc time: %ld us\r\n", periodic_task_get_exe_time_us(pTask6_nmb), periodic_task_get_cyc_time_us(pTask6_nmb));
-	HAL_UART_Transmit(&huart2, (uint8_t*)buf, sz, 10);
-
-	sz = sprintf(buf, "task 7 exe time: %ld us cyc time: %ld us\r\n", periodic_task_get_exe_time_us(pTask7_nmb), periodic_task_get_cyc_time_us(pTask7_nmb));
-	HAL_UART_Transmit(&huart2, (uint8_t*)buf, sz, 10);
-
-	sz = sprintf(buf, "task 8 exe time: %ld us cyc time: %ld us\r\n", periodic_task_get_exe_time_us(pTask8_nmb), periodic_task_get_cyc_time_us(pTask8_nmb));
-	HAL_UART_Transmit(&huart2, (uint8_t*)buf, sz, 10);
-
-	sz = sprintf(buf, "task 9 exe time: %ld us cyc time: %ld us\r\n", periodic_task_get_exe_time_us(pTask9_nmb), periodic_task_get_cyc_time_us(pTask9_nmb));
-	HAL_UART_Transmit(&huart2, (uint8_t*)buf, sz, 10);
-
-	sz = sprintf(buf, "var1: %6.3f var2: %6.3f var3 %6.3f\r\n", var1, var2, var3);
-	HAL_UART_Transmit(&huart2, (uint8_t*)buf, sz, 10);
-
-	HAL_UART_Transmit(&huart2, (uint8_t*)"----------\r\n", 12, 10);
-}
 
 /* USER CODE END 4 */
 
