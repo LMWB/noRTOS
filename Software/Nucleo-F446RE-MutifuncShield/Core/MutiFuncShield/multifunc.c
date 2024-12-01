@@ -91,7 +91,7 @@ static void mf_shift_data(const uint16_t data) {
 	}
 }
 
-char mf_uint_to_hex(uint8_t uint)
+char mf_uint_to_char(uint8_t uint)
 {
 	return SEGMENT_MAP_HEX[uint];
 }

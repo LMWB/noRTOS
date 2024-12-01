@@ -13,6 +13,15 @@
   * in the root directory of this software component.
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
+  *
+  *
+  *
+  * DEPRECATED do not use this project!
+  *
+  *
+  *
+  *
+  *
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -196,7 +205,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 	case S1_Pin:
 		//HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-		mf_write_to_display_memory(1, mf_uint_to_hex(cnt));
+		mf_write_to_display_memory(1, mf_uint_to_char(cnt));
 		cnt+=1;
 		if(cnt>=16)
 		{

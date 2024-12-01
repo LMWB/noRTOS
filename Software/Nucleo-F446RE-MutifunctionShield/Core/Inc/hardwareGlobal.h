@@ -56,8 +56,18 @@
 #define MF_LED4_turn_off()		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0)
 #define MF_LED4_toggle()		HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin)
 
+/* Buzzer */
 #define MF_BEEP_OFF()			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, GPIO_PIN_SET)
 #define MF_BEEP_ON()			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, GPIO_PIN_RESET)
+
+/* Shift Register for 7 Segment Display */
+#define MF_SHCP_PIN_LOW()	HAL_GPIO_WritePin(SHCP_GPIO_Port, SHCP_Pin, 0)
+#define MF_SHCP_PIN_HIGH()	HAL_GPIO_WritePin(SHCP_GPIO_Port, SHCP_Pin, 1)
+
+#define MF_STCP_PIN_LOW()	HAL_GPIO_WritePin(STCP_GPIO_Port, STCP_Pin, 0)
+#define MF_STCP_PIN_HIGH()	HAL_GPIO_WritePin(STCP_GPIO_Port, STCP_Pin, 1)
+
+#define MF_WIRTIE_BIT_TO_DATA_PIN(bit) HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, bit);
 
 
 /* *** UART ***************************************************************** */

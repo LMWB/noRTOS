@@ -8,6 +8,15 @@
 noRTOS_task_t *global_list_of_tasks[NORTOS_NO_OF_MAX_TASK];
 static uint32_t number_of_active_task = 0;
 
+
+void noRTOS_print_version(void){
+	printf("booting from noRTOS Version: %d.%d\n", NORTOS_VERSION_MAYOR, NORTOS_VERSION_MINOR);
+}
+
+void noRTOS_print_active_task_running(void){
+	printf("starting noRTOS scheduler with %ld task in queue\n", number_of_active_task);
+}
+
 bool noRTOS_add_task_to_scheduler(noRTOS_task_t *task){
 	if(number_of_active_task < NORTOS_NO_OF_MAX_TASK){
 		global_list_of_tasks[number_of_active_task] = task;
@@ -17,7 +26,17 @@ bool noRTOS_add_task_to_scheduler(noRTOS_task_t *task){
 	return false;
 }
 
-void noRTOS_run_schedular(void) {
+/* override this with your implementation */
+__weak void noRTOS_setup(void){
+	;
+}
+
+void noRTOS_run_scheduler(void) {
+
+	noRTOS_print_version();
+	noRTOS_print_active_task_running();
+	noRTOS_setup();
+
 	while(1){
 		uint32_t now = NORTOS_SCHEDULAR_GET_TICK();
 
@@ -67,5 +86,4 @@ void noRTOS_UART2_receive_byte_callback(void){
 		rx_size++;
 		noRTOS_UART2_read_byte_with_interrupt();
 	}
-
 }

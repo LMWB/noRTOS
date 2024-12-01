@@ -165,7 +165,7 @@ int main(void) {
 	noRTOS_add_task_to_scheduler(&test_task3);
 
 	/* this runs for ever */
-	noRTOS_run_schedular();
+	noRTOS_run_scheduler();
 
 	/* never get here! */
 
