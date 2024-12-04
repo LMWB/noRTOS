@@ -2,7 +2,7 @@
 rudimentary C-library for microcontrollers to organize and run various task with sufficient performance without RTOS
 
 # Preface
-I'm sure there are many thousand different very good approaches out there on how to organize and manage multiple things do on a single cpu low budget microcontroller **without a RTOS**, but still I would like to share mine.
+I'm sure there are many thousand different very good approaches out there on how to organize and manage multiple "things to do" on a single cpu low budget microcontroller **without a RTOS**, but still I would like to share mine.
 
 # How To Use
 Copy paste the ```noRTOS.c, noRTOS.h, utils.c, utils.h``` files to your project tree.
