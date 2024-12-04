@@ -151,8 +151,8 @@ int main(void) {
 	noRTOS_task_t task_communication = { .delay = eNORTOS_PERIODE_100ms, .task_callback = inter_task_communication };
 	noRTOS_add_task_to_scheduler(&task_communication);
 
-	noRTOS_task_t heartbeat = { .delay = eNORTOS_PERIODE_1s, .task_callback = blinky };
-	noRTOS_add_task_to_scheduler(&heartbeat);
+	noRTOS_task_t blinky_t = { .delay = eNORTOS_PERIODE_1s, .task_callback = blinky };
+	noRTOS_add_task_to_scheduler(&blinky_t);
 
 	noRTOS_task_t task_timing = { .delay = eNORTOS_PERIODE_500ms, .task_callback = timing };
 	noRTOS_add_task_to_scheduler(&task_timing);
