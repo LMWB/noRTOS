@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -25,6 +26,13 @@
 /* USER CODE BEGIN Includes */
 #include "noRTOS.h"
 #include "hardwareGlobal.h"
+
+#define __1KByte__ 1024
+#define uart_rx_buffer_size (1 * __1KByte__)
+static uint8_t uart_rx_buffer_internet[uart_rx_buffer_size];
+static uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size];
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,6 +64,36 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void noRTOS_setup(void) {
+	// enable uart with DMA interrupt for ESP32
+	UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size )
+	// enable uart with DMA interupt for COM port (terminal)
+	UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
+	printf("ESP32 Demo\n");
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if (huart->Instance == UART_TERMINAL_INSTANCE){
+	}
+
+	if (huart->Instance == UART_INTERNET_INSTANCE){
+	}
+}
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+	if (huart->Instance == UART_TERMINAL_INSTANCE){
+		// transmit to esp32 what has been received from terminal
+		UART_SEND_INTERNET(uart_rx_buffer_terminal, Size);
+		UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
+	}
+
+	if (huart->Instance == UART_INTERNET_INSTANCE){
+		// transmit to esp32 what has been received from terminal
+		UART_SEND_TERMINAL(uart_rx_buffer_internet, Size);
+		UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size )
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -88,10 +126,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  noRTOS_run_scheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -101,7 +141,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  printf("Hello from AT-Command Handler on ESP32\n");
+	  printf("You should not see this message!\n");
 	  DELAY(500);
   }
   /* USER CODE END 3 */

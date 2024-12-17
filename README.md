@@ -8,7 +8,9 @@ I'm sure there are many thousand different very good approaches out there on how
 Copy paste the ```noRTOS.c, noRTOS.h, utils.c, utils.h``` files to your project tree.
 Copy paste ```hardwareGlobal.h``` to you project tree and modify line ```19 #define GET_TICK()``` according to your platform.
 
-In ```main.c``` right before the ```int main(void)```  do the following. Create some callback function you like to run. Consider each as individual **non blocking** main()-loops.   
+In ```main.c``` right before the ```int main(void)```  do the following.
+Create some callback functions you like to run.
+Consider each as individual **non blocking** main()-loops.   
 
 ```
 void blinky(void) {
@@ -20,7 +22,7 @@ void test_callback1(void) {
 }
 
 ```
-Than right before ```while(1)``` super-loop create instances of ```noRTOS_task_t``` and add them to the scheduler.   
+After that and right before the ```while(1)``` super-loop create corresponding amount of instances of type ```noRTOS_task_t``` and add them to the scheduler.   
 
 ```
 noRTOS_task_t blinky_t = { .delay = eNORTOS_PERIODE_1s, .task_callback = blinky };

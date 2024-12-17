@@ -33,47 +33,22 @@
 #define NUCLEO_LED_turn_off()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0)
 #define NUCLEO_LED_turn_toggle()	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
 
-#define MF_BUTTON_1   			S1_Pin
-#define MF_BUTTON_1_READ()		HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin)
-#define MF_BUTTON_2   			S2_Pin
-#define MF_BUTTON_2_READ()		HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin)
-#define MF_BUTTON_3   			S3_Pin
-#define MF_BUTTON_3_READ()		HAL_GPIO_ReadPin(S3_GPIO_Port, S3_Pin)
-
-#define MF_LED1_turn_on()		HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, 1)
-#define MF_LED1_turn_off()		HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, 0)
-#define MF_LED1_toggle()		HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin)
-
-#define MF_LED2_turn_on()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1)
-#define MF_LED2_turn_off()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0)
-#define MF_LED2_toggle()		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
-
-#define MF_LED3_turn_on()		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 1)
-#define MF_LED3_turn_off()		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 0)
-#define MF_LED3_toggle()		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin)
-
-#define MF_LED4_turn_on()		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 1)
-#define MF_LED4_turn_off()		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0)
-#define MF_LED4_toggle()		HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin)
-
-/* Buzzer */
-#define MF_BEEP_OFF()			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, GPIO_PIN_SET)
-#define MF_BEEP_ON()			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, GPIO_PIN_RESET)
-
-/* Shift Register for 7 Segment Display */
-//#define MF_SHCP_PIN_LOW()	HAL_GPIO_WritePin(SHCP_GPIO_Port, SHCP_Pin, 0)
-//#define MF_SHCP_PIN_HIGH()	HAL_GPIO_WritePin(SHCP_GPIO_Port, SHCP_Pin, 1)
-//
-//#define MF_STCP_PIN_LOW()	HAL_GPIO_WritePin(STCP_GPIO_Port, STCP_Pin, 0)
-//#define MF_STCP_PIN_HIGH()	HAL_GPIO_WritePin(STCP_GPIO_Port, STCP_Pin, 1)
-//
-//#define MF_WIRTIE_BIT_TO_DATA_PIN(bit) HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, bit);
-
 
 /* *** UART ***************************************************************** */
 #define UART_TERMINAL_HANDLER 	            huart2
 #define UART_TERMINAL_INSTANCE 	            USART2
 #define UART_SEND_TERMINAL(string, size)    HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
+
+#define UART_TERMINAL_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(&UART_TERMINAL_HANDLER, buffer, 1)
+#define UART_TERMINAL_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_TERMINAL_HANDLER, buffer, size);
+
+
+#define UART_INTERNET_HANDLER 	            huart1
+#define UART_INTERNET_INSTANCE 	            USART1
+#define UART_SEND_INTERNET(string, size)    HAL_UART_Transmit(&UART_INTERNET_HANDLER, string, size, HAL_MAX_DELAY)
+
+#define UART_INTERNET_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(&UART_INTERNET_HANDLER, buffer, 1)
+#define UART_INTERNET_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_INTERNET_HANDLER, buffer, size);
 
 /* *** I2C ********************************************************************/
 
