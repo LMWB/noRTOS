@@ -28,8 +28,10 @@
 #include "hardwareGlobal.h"
 
 #define __1KByte__ 1024
-#define uart_rx_buffer_size (1 * __1KByte__)
+#define uart_rx_buffer_size (__1KByte__)
 static uint8_t uart_rx_buffer_internet[uart_rx_buffer_size];
+volatile uint16_t head = 0;
+volatile uint16_t tail = 0;
 static uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size];
 
 
@@ -64,9 +66,34 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void uart_increment_pointer(void){
+	head += 1;
+	if(head >= uart_rx_buffer_size){
+		head = 0;
+	}
+}
+
+void uart_rx_complete_callback(void){
+	uint16_t size = head - tail;
+	if( (size > 3) && (uart_rx_buffer_internet[head-1] == '\n') && (uart_rx_buffer_internet[head-2] == '\r') ){
+		UART_SEND_TERMINAL( &uart_rx_buffer_internet[tail], size);
+		memset(&uart_rx_buffer_internet[tail], '\0', size);
+		head = 0;
+		tail = 0;
+		HAL_UART_AbortReceive_IT(&huart1);
+		UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
+	}
+}
+
 void noRTOS_setup(void) {
 	// enable uart with DMA interrupt for ESP32
-	UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size )
+	//UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size );
+
+	// enable uart RX byte-wise interrupt for ESP32 AT-Command Communication
+	//uart_read_until_line_end();
+	UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
+
 	// enable uart with DMA interupt for COM port (terminal)
 	UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
 	printf("ESP32 Demo\n");
@@ -78,6 +105,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	}
 
 	if (huart->Instance == UART_INTERNET_INSTANCE){
+		// put every byte to uart_rx_buffer and start interrupt again
+		uart_increment_pointer();
+		UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
 	}
 }
 
@@ -89,10 +119,14 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	}
 
 	if (huart->Instance == UART_INTERNET_INSTANCE){
-		// transmit to esp32 what has been received from terminal
+		// transmit to terminal what has been received from esp32
 		UART_SEND_TERMINAL(uart_rx_buffer_internet, Size);
-		UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size )
+		UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size );
 	}
+}
+
+void HAL_UART_AbortReceiveCpltCallback(UART_HandleTypeDef *huart){
+	__NOP();
 }
 
 /* USER CODE END 0 */
@@ -131,6 +165,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  noRTOS_task_t uart_calback_t = {.delay = eNORTOS_PERIODE_100ms, .task_callback = uart_rx_complete_callback};
+  noRTOS_add_task_to_scheduler(&uart_calback_t);
   noRTOS_run_scheduler();
   /* USER CODE END 2 */
 
