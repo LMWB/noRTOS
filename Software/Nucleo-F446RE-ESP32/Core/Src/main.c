@@ -35,6 +35,21 @@ volatile uint16_t tail = 0;
 static uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size];
 
 
+/* Constants to be used in ESP32 MQTT State Machine */
+#define String char*
+String ESP32_RESET					= "AT+RST";
+String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?";
+String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?";
+String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"";
+String ES32_QUERY_IP 				= "AT+CIFSR";
+
+String ESP32_PING 				= "AT+PING=\"www.google.de\"";
+
+String ESP32_SET_SNTP_TIME 		= "AT+CIPSNTPCFG=1,0,\"zeit.fu-berlin.de\"";
+String ESP32_QUERY_TIMESTAMP 	= "AT+SYSTIMESTAMP?";
+String ESP32_QUERY_SNTP_TIME 	= "AT+CIPSNTPTIME?";
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -74,24 +89,26 @@ void uart_increment_pointer(void){
 	}
 }
 
+void uart_clear_fifo(void){
+	uint16_t size = head - tail;
+	memset(&uart_rx_buffer_internet[tail], '\0', size);
+	head = 0;
+	tail = 0;
+	UART_INTERNET_ABORT_IRQ();
+	UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
+}
+
 void uart_rx_complete_callback(void){
 	uint16_t size = head - tail;
 	if( (size > 3) && (uart_rx_buffer_internet[head-1] == '\n') && (uart_rx_buffer_internet[head-2] == '\r') ){
-		UART_SEND_TERMINAL( &uart_rx_buffer_internet[tail], size);
-		memset(&uart_rx_buffer_internet[tail], '\0', size);
-		head = 0;
-		tail = 0;
-		HAL_UART_AbortReceive_IT(&huart1);
-		UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
+		UART_TERMINAL_SEND( &uart_rx_buffer_internet[tail], size);
+		uart_clear_fifo();
 	}
 }
 
 void noRTOS_setup(void) {
-	// enable uart with DMA interrupt for ESP32
-	//UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size );
 
 	// enable uart RX byte-wise interrupt for ESP32 AT-Command Communication
-	//uart_read_until_line_end();
 	UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
 
 	// enable uart with DMA interupt for COM port (terminal)
@@ -99,7 +116,7 @@ void noRTOS_setup(void) {
 	printf("ESP32 Demo\n");
 }
 
-
+/* STM32 HAL Based UART Bridge with RX-byte (char) interrupt */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
 	}
@@ -111,22 +128,19 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	}
 }
 
+/* STM32 HAL Based UART Bridge with RX-line interrupt */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
 		// transmit to esp32 what has been received from terminal
-		UART_SEND_INTERNET(uart_rx_buffer_terminal, Size);
+		UART_INTERNET_SEND(uart_rx_buffer_terminal, Size);
 		UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
 	}
 
 	if (huart->Instance == UART_INTERNET_INSTANCE){
 		// transmit to terminal what has been received from esp32
-		UART_SEND_TERMINAL(uart_rx_buffer_internet, Size);
+		UART_TERMINAL_SEND(uart_rx_buffer_internet, Size);
 		UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size );
 	}
-}
-
-void HAL_UART_AbortReceiveCpltCallback(UART_HandleTypeDef *huart){
-	__NOP();
 }
 
 /* USER CODE END 0 */

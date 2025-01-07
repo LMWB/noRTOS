@@ -35,20 +35,21 @@
 
 
 /* *** UART ***************************************************************** */
-#define UART_TERMINAL_HANDLER 	            huart2
-#define UART_TERMINAL_INSTANCE 	            USART2
-#define UART_SEND_TERMINAL(string, size)    HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
+#define UART_TERMINAL_HANDLER 	            		huart2
+#define UART_TERMINAL_INSTANCE 	            		USART2
+#define UART_TERMINAL_SEND(string, size)    		HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
 
 #define UART_TERMINAL_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(&UART_TERMINAL_HANDLER, buffer, 1)
 #define UART_TERMINAL_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_TERMINAL_HANDLER, buffer, size)
 
 
-#define UART_INTERNET_HANDLER 	            huart1
-#define UART_INTERNET_INSTANCE 	            USART1
-#define UART_SEND_INTERNET(string, size)    HAL_UART_Transmit(&UART_INTERNET_HANDLER, string, size, HAL_MAX_DELAY)
+#define UART_INTERNET_HANDLER 	            		huart1
+#define UART_INTERNET_INSTANCE 	            		USART1
+#define UART_INTERNET_SEND(string, size)    		HAL_UART_Transmit(&UART_INTERNET_HANDLER, string, size, HAL_MAX_DELAY)
 
-#define UART_INTERNET_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(&UART_INTERNET_HANDLER, buffer, 1)
-#define UART_INTERNET_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_INTERNET_HANDLER, buffer, size)
+#define UART_INTERNET_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(			&UART_INTERNET_HANDLER, buffer, 1)
+#define UART_INTERNET_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(	&UART_INTERNET_HANDLER, buffer, size)
+#define UART_INTERNET_ABORT_IRQ()					HAL_UART_AbortReceive_IT(		&UART_INTERNET_HANDLER)
 
 /* *** I2C ********************************************************************/
 
