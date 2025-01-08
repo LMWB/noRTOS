@@ -34,20 +34,200 @@ volatile uint16_t head = 0;
 volatile uint16_t tail = 0;
 static uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size];
 
+typedef struct __WiFi_Client__{
+	const char* wifi_ssid;
+	const char* wifi_password;
+	const char* mqtt_broker_endpoint;
+	const char* mqtt_username;
+	const char* mqtt_password;
+	const char* mqtt_port;
+}WiFi_Client_t;
+
+WiFi_Client_t esp32Client;
 
 /* Constants to be used in ESP32 MQTT State Machine */
 #define String char*
-String ESP32_RESET					= "AT+RST";
-String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?";
-String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?";
-String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"";
-String ES32_QUERY_IP 				= "AT+CIFSR";
+String ESP32_RESET					= "AT+RST\r\n";
+String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?\r\n";
+String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?\r\n";
+String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"\r\n";
+String ES32_QUERY_IP 				= "AT+CIFSR\r\n";
 
-String ESP32_PING 				= "AT+PING=\"www.google.de\"";
+String ESP32_PING 					= "AT+PING=\"www.google.de\"\r\n";
 
-String ESP32_SET_SNTP_TIME 		= "AT+CIPSNTPCFG=1,0,\"zeit.fu-berlin.de\"";
-String ESP32_QUERY_TIMESTAMP 	= "AT+SYSTIMESTAMP?";
-String ESP32_QUERY_SNTP_TIME 	= "AT+CIPSNTPTIME?";
+String ESP32_SET_SNTP_TIME 			= "AT+CIPSNTPCFG=1,0,\"zeit.fu-berlin.de\"\r\n";
+String ESP32_QUERY_TIMESTAMP 		= "AT+SYSTIMESTAMP?\r\n";
+String ESP32_QUERY_SNTP_TIME 		= "AT+CIPSNTPTIME?\r\n";
+
+String ESP32_SET_MQTT_CONFIG 		= "AT+MQTTUSERCFG=0,1,\"sc36ClientID\",\"emqx\",\"public\",0,0,\"\"\r\n";
+String ESP32_QUERY_MQTT_CONNECTION 	= "AT+MQTTCONN?\r\n";
+String ESP32_SET_MQTT_CONNECTION 	= "AT+MQTTCONN=0,\"broker.emqx.io\",1883,1\r\n";
+String ESP32_CLOSE_MQTT_CONNECTION 	= "AT+MQTTCLEAN=0\r\n";
+
+String ESP32_PUB_MQTT 				= "AT+MQTTPUB=0,\"topic008\",\"hallo broker\",1,0\r\n";
+String ESP32_PUB_RAW_MQTT 			= "AT+MQTTPUBRAW=<LinkID>,<\"topic\">,<length>,<qos>,<retain>\r\n";
+String ESP32_QUERY_SUB_MQTT 		= "AT+MQTTSUB?\r\n";
+String ESP32_SET_SUB_MQTT 			= "AT+MQTTSUB=0,\"topic007\",1\r\n";
+
+/* MQTT Connection Example with web based client
+ * https://mqttx.app/web-client#/recent_connections/8dc002fe-dc48-4926-8760-bde4bbb4c859
+ * https://www.emqx.com/en/blog/mqtt-client-tools
+ * */
+
+// AT+MQTTUSERCFG=0,7,"sc36ClientID","emqx","public",0,0,"mqtt" (uses WSS scheme 7: MQTT over WebSocket Secure (based on TLS, no certificate verify).
+// AT+MQTTCONN=0,"broker.emqx.io",8084,1
+// AT+MQTTSUB=0,"topic007",1
+// AT+MQTTPUB=0,"topic008","hallo broker",1,0
+
+/* another MQTT Connection Example with web based client */
+// AT+MQTTUSERCFG=0,1,"sc36ClientID","emqx","public",0,0,"" (uses TCP sechme 1: MQTT over TCP)
+// AT+MQTTCONN=0,"broker.emqx.io",1883,1
+// AT+MQTTSUB=0,"topic007",1
+// AT+MQTTPUB=0,"topic008","hallo broker",1,0
+
+void esp32_reset(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_RESET, strlen(ESP32_RESET));
+}
+
+void esp32_check_wifi_connection(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_QUERY_WIFI_CONNECTION, strlen(ESP32_QUERY_WIFI_CONNECTION) );
+}
+
+void esp32_connect_to_wifi(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_AP_CONNECTION, strlen(ESP32_SET_AP_CONNECTION));
+}
+
+void esp32_connect_to_sntp(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_SNTP_TIME, strlen(ESP32_SET_SNTP_TIME));
+}
+
+void esp32_config_mqtt_connection(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_MQTT_CONFIG, strlen(ESP32_SET_MQTT_CONFIG));
+}
+
+void esp32_connect_to_mqtt_broker(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_MQTT_CONNECTION, strlen(ESP32_SET_MQTT_CONNECTION));
+}
+
+void esp32_subscribe_to_topic(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_SUB_MQTT, strlen(ESP32_SET_SUB_MQTT));
+}
+void esp32_publish_to_topic(){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_PUB_MQTT, strlen(ESP32_PUB_MQTT));
+}
+
+typedef enum{
+	 esp32_error = 0,
+	 esp32_ok,
+	 esp32_timeout,
+}esp32_exit_code_t;
+
+typedef enum{
+	undefined = 0,
+	standby,				// 1
+	boot_up,				// 2
+	connect_to_wifi,		// 3
+	connect_to_mqtt_broker,	// 4
+	subscribe_to_mqtt_msg,	// 5
+	online,					// 6
+	publish_mqtt_msg,		// 7
+	wait_for_response,		// 8
+}MQTT_client_t;
+
+typedef struct {
+	/* public attributes */
+	uint32_t timeout;
+
+	/* private attributes */
+	char at_response_buffer[512];
+	char at_response_to_be[128];
+	MQTT_client_t state;		// current state operation in
+	MQTT_client_t next_state;	// next state aiming to after at_response success (nothing to do with state machine new_state)
+}client_fsm_t;
+
+void esp32_set_needle_for_response(client_fsm_t* client, String at_response, uint32_t timeout){
+	memcpy(client->at_response_to_be, at_response, strlen(at_response));
+	client->timeout = timeout;
+}
+
+esp32_exit_code_t esp32_wait_for_response(client_fsm_t* client){
+	uint32_t tic = GET_TICK();
+
+	while(1){
+		uint32_t toc = GET_TICK();
+		if(0){
+			return esp32_ok;
+		}
+		if( (toc - tic) >= client->timeout){
+			return esp32_timeout;
+		}
+	}
+	return esp32_error;
+}
+
+
+void esp32_mqtt_fsm(client_fsm_t *client) {
+	MQTT_client_t state = client->state;
+	MQTT_client_t new_state = standby;
+
+	switch (state) {
+	case undefined:
+		new_state = boot_up;
+		break;
+	case standby:
+		new_state = standby;
+		break;
+	case boot_up:
+		esp32_reset();
+		//client->next_state = connect_to_wifi;
+		//esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
+		new_state = standby;
+		break;
+	case connect_to_wifi:
+		esp32_connect_to_wifi();
+		new_state = standby;
+		break;
+
+	case connect_to_mqtt_broker:
+		esp32_config_mqtt_connection();
+		DELAY(2000);
+		esp32_connect_to_mqtt_broker();
+		DELAY(2000);
+		new_state = standby;
+		break;
+
+	case subscribe_to_mqtt_msg:
+		esp32_subscribe_to_topic();
+		new_state = standby;
+		break;
+
+	case online:
+		new_state = standby;
+		break;
+
+	case publish_mqtt_msg:
+		esp32_publish_to_topic();
+		new_state = standby;
+		break;
+
+	case wait_for_response:
+		esp32_wait_for_response(client);
+		// aber wie gehts dann weiter? woher weiss er welchen nochfolge state er machen muss
+		break;
+
+	default:
+		break;
+	}
+	if (new_state != state) {
+		client->state = new_state;
+	}
+}
+
+client_fsm_t esp32_mqtt_client = {.state = standby};
+
+void test_fsm(void){
+	esp32_mqtt_fsm(&esp32_mqtt_client);
+}
 
 
 /* USER CODE END Includes */
@@ -108,6 +288,13 @@ void uart_rx_complete_callback(void){
 
 void noRTOS_setup(void) {
 
+	esp32Client.wifi_ssid 		= "VodafoneMobileWiFi-6B18C9";
+	esp32Client.wifi_password 	= "wGkH536785";
+	esp32Client.mqtt_broker_endpoint 	= "broker.emqx.io";  // EMQX broker endpoint
+	esp32Client.mqtt_username 			= "emqx";  			// MQTT username for authentication
+	esp32Client.mqtt_password 			= "public";  		// MQTT password for authentication
+	esp32Client.mqtt_port 				= "1883";  			// MQTT port (TCP)
+
 	// enable uart RX byte-wise interrupt for ESP32 AT-Command Communication
 	UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
 
@@ -115,6 +302,8 @@ void noRTOS_setup(void) {
 	UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
 	printf("ESP32 Demo\n");
 }
+
+/* -------------------------------------------------------------------------------------------------------- */
 
 /* STM32 HAL Based UART Bridge with RX-byte (char) interrupt */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
@@ -181,6 +370,10 @@ int main(void)
 
   noRTOS_task_t uart_calback_t = {.delay = eNORTOS_PERIODE_100ms, .task_callback = uart_rx_complete_callback};
   noRTOS_add_task_to_scheduler(&uart_calback_t);
+
+  noRTOS_task_t check_connection_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = test_fsm};
+  noRTOS_add_task_to_scheduler(&check_connection_t);
+
   noRTOS_run_scheduler();
   /* USER CODE END 2 */
 
