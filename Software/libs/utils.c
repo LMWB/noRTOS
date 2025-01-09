@@ -18,3 +18,36 @@ uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, cha
 
 	return bytes_written + 1;
 }
+
+
+void myprintf(const char *fmt, ...) {
+	static char buffer[256];
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(buffer, sizeof(buffer), fmt, args);
+	va_end(args);
+
+	int len = strlen(buffer);
+	UART_TERMINAL_SEND((uint8_t *) buffer, len);
+}
+
+void scan_i2c_sensors(void) {
+	myprintf("Scanning I2C bus...\n");
+
+	DEVICE_STATUS_DEFINITION res;
+	for (uint16_t i = 0; i < 128; i++) {
+		res = IS_I2C_DEVICE_READY(i << 1);
+		if( i%32 == 0){
+			myprintf("\n");
+		}
+		if (res == DEVICE_OK) {
+			myprintf("0x%02X", i);
+		} else {
+			myprintf(".");
+		}
+		DELAY(20);
+	}
+
+	myprintf("\r\n");
+	DELAY(1000);
+}

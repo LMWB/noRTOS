@@ -13,4 +13,6 @@
 
 uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string);
 
+void scan_i2c_sensors(void);
+
 #endif

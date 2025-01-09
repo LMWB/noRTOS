@@ -12,6 +12,7 @@
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"
 #include "usart.h"
+#include "i2c.h"
 
 /* *** Platform delay (polling) ***************************************************************** */
 #define MAX_DELAY        HAL_MAX_DELAY
@@ -31,7 +32,7 @@
 
 #define NUCLEO_LED_turn_on()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1)
 #define NUCLEO_LED_turn_off()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0)
-#define NUCLEO_LED_turn_toggle()	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
+#define NUCLEO_LED_toggle()			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
 
 
 /* *** UART ***************************************************************** */
@@ -52,6 +53,10 @@
 #define UART_INTERNET_ABORT_IRQ()					HAL_UART_AbortReceive_IT(		&UART_INTERNET_HANDLER)
 
 /* *** I2C ********************************************************************/
+#define I2C_HANDLER 				        		hi2c1
+#define I2C_GAS_SENSOR                  			I2C1_HANDLER
+#define I2C_INSTANCE				        		I2C1
+#define IS_I2C_DEVICE_READY(dev_address)    		HAL_I2C_IsDeviceReady(&I2C_HANDLER, dev_address, 1, 100)
 
 /* *** SPI ********************************************************************/
 
