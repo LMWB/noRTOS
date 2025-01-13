@@ -96,19 +96,10 @@ void noRTOS_setup(void) {
 	NUCLEO_LED_turn_on();
 	scan_i2c_sensors();
 
-	// set ENS160 to OPERATIONAL MODE 0x01
-	uint8_t mode = 0x01;
-	ens160_i2c_write_register(ENS160_OPMODE, &mode, 1);
+	ens160_init();
 
-	uint16_t temp_in = 0x488A; // (17+273.15)*64 = 18569.6 = 0x488A; For 25°C the input value is calculated as follows: (25 + 273.15) * 64 = 0x4A8A.
-	uint8_t temp_in_lsb = 0x8A;
-	uint8_t temp_in_msb = 0x48;
-	ens160_i2c_write_register(ENS160_TEMP_IN, &temp_in_lsb, 1);
-	ens160_i2c_write_register(ENS160_TEMP_IN, &temp_in_msb, 1);
 
-	// set ENS160 to OPERATIONAL MODE 0x02
-	mode = 0x02;
-	ens160_i2c_write_register(ENS160_OPMODE, &mode, 1);
+
 	NUCLEO_LED_turn_off();
 }
 
