@@ -92,13 +92,18 @@ void sample_ens160(void){
 	printf("ENS160 Humidity: %d\n", rleative_humidity);
 }
 
+void sample_temp_hum(void){
+	printf("Sample temperature and humidity and transmit to ens160 and ccs811\n");
+	// do stuff
+	printf("done\n");
+}
+
 void noRTOS_setup(void) {
 	NUCLEO_LED_turn_on();
 	scan_i2c_sensors();
 
 	ens160_init();
-
-
+	ccs811_init();
 
 	NUCLEO_LED_turn_off();
 }
@@ -145,6 +150,10 @@ int main(void)
 
   noRTOS_task_t ens160_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = sample_ens160};
   noRTOS_add_task_to_scheduler(&ens160_t);
+
+  /* ens160 and ccs811 sensors need to get temperature and humidity informations from external sensor once in a while */
+  noRTOS_task_t temp_hum_t = {.delay = eNORTOS_PERIODE_10min, .task_callback = sample_temp_hum};
+  noRTOS_add_task_to_scheduler(&temp_hum_t);
 
   noRTOS_run_scheduler();
   /* USER CODE END 2 */
