@@ -40,6 +40,8 @@
 #include "noRTOS.h"
 #include "hardwareGlobal.h"
 #include "Drivers/Sensors/CO2/ENS160.h"
+#include "Drivers/Sensors/CO2/CCS811.h"
+#include "Drivers/Sensors/CO2/SCD4x.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,8 +74,16 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+ccs811_data_t myCCS811 = {};
+
 void blinky(void){
 	NUCLEO_LED_toggle();
+}
+
+void sample_temp_hum(void){
+	printf("Sample temperature and humidity and transmit to ens160 and ccs811\n");
+	// do stuff
+	printf("done\n");
 }
 
 void sample_ens160(void){
@@ -92,10 +102,26 @@ void sample_ens160(void){
 	printf("ENS160 Humidity: %d\n", rleative_humidity);
 }
 
-void sample_temp_hum(void){
-	printf("Sample temperature and humidity and transmit to ens160 and ccs811\n");
-	// do stuff
-	printf("done\n");
+void sample_ccs811(void){
+
+	ccs811_sample_data(&myCCS811);
+
+}
+
+void sample_scd4x(void){
+	bool data_ready_flag = false;
+	scd4x_get_data_ready_flag(&data_ready_flag);
+	if (!data_ready_flag) {
+		return;
+	}else{
+		uint16_t co2;
+		int32_t temperature;
+		int32_t humidity;
+		scd4x_read_measurement(&co2, &temperature, &humidity);
+		printf("SCD4x-CO2: %u\n", co2);
+		printf("SCD4x-Temperature: %ld milli Grad C\n", temperature);
+		printf("SCD4x-Humidity: %ld mRH\n", humidity);
+	}
 }
 
 void noRTOS_setup(void) {
@@ -104,6 +130,7 @@ void noRTOS_setup(void) {
 
 	ens160_init();
 	ccs811_init();
+	sdc4x_init();
 
 	NUCLEO_LED_turn_off();
 }
@@ -148,8 +175,14 @@ int main(void)
   noRTOS_task_t blinky_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = blinky};
   noRTOS_add_task_to_scheduler(&blinky_t);
 
-  noRTOS_task_t ens160_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = sample_ens160};
+  noRTOS_task_t ens160_t = {.delay = eNORTOS_PERIODE_10s, .task_callback = sample_ens160};
   noRTOS_add_task_to_scheduler(&ens160_t);
+
+  noRTOS_task_t ccs811_t = {.delay = eNORTOS_PERIODE_10s, .task_callback = sample_ccs811};
+  noRTOS_add_task_to_scheduler(&ccs811_t);
+
+  noRTOS_task_t scd4x_t = {.delay = eNORTOS_PERIODE_10s, .task_callback = sample_scd4x};
+  noRTOS_add_task_to_scheduler(&scd4x_t);
 
   /* ens160 and ccs811 sensors need to get temperature and humidity informations from external sensor once in a while */
   noRTOS_task_t temp_hum_t = {.delay = eNORTOS_PERIODE_10min, .task_callback = sample_temp_hum};

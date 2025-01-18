@@ -25,7 +25,7 @@ void ens160_i2c_read_register(uint8_t register_address, uint8_t* data, uint16_t 
 void ens160_i2c_write_register(uint8_t register_address, uint8_t* data, uint16_t length);
 
 void ens160_init(void);
-void ccs811_sample_data(ens160_data_t* data);
+void ens160s_sample_data(ens160_data_t* data);
 void ens160_translate_status_byte(uint8_t status_byte);
 
 

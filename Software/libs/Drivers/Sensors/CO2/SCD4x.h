@@ -3,19 +3,16 @@
 
 #include "stdint.h"
 #include "stdbool.h"
-#define SCD4x_I2C_ADDRESS	0x62
 
-#define SCD4x_CMD_START_PERIODIC_MEASUREMENT	0x21b1
-#define SCD4x_CMD_REINIT 						0x3646
-#define SCD4x_CMD_GET_SERIAL_NUMBER 			0x3682
-#define SCD4x_CMD_WAKE_UP 						0x36f6
-#define SCD4x_CMD_STOP_PERIODIC_MEASUREMENT 	0x3f86
-#define SCD4x_CMD_GET_DATA_READY_STATUS 		0xe4b8
-#define SCD4x_CMD_READ_MEASUREMENT 				0xec05
-
+typedef struct _scd4x_data{
+	uint32_t eCO2;
+	int32_t temperature;
+	int32_t humidity;
+}csd4x_data_t;
 
 void scd4x_sleep(uint32_t milli_seconds);
 
+void sdc4x_init(void);
 void scd4x_wake_up(void);
 void scd4x_stop_periodic_measurement(void);
 void scd4x_reinit(void);
