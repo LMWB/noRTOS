@@ -26,253 +26,17 @@
 /* USER CODE BEGIN Includes */
 #include "noRTOS.h"
 #include "hardwareGlobal.h"
-
-#define __1KByte__ 1024
-#define uart_rx_buffer_size (__1KByte__)
-static uint8_t uart_rx_buffer_internet[uart_rx_buffer_size];
-volatile uint16_t head = 0;
-volatile uint16_t tail = 0;
-static uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size];
-
-typedef struct __WiFi_Client__{
-	const char* wifi_ssid;
-	const char* wifi_password;
-	const char* mqtt_broker_endpoint;
-	const char* mqtt_username;
-	const char* mqtt_password;
-	const char* mqtt_port;
-}WiFi_Client_t;
-
-WiFi_Client_t esp32Client;
-
-/* Constants to be used in ESP32 MQTT State Machine */
-#define String char*
-String ESP32_RESET					= "AT+RST\r\n";
-String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?\r\n";
-String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?\r\n";
-//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"\r\n";
-String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
-String ES32_QUERY_IP 				= "AT+CIFSR\r\n";
-
-String ESP32_PING 					= "AT+PING=\"www.google.de\"\r\n";
-
-String ESP32_SET_SNTP_TIME 			= "AT+CIPSNTPCFG=1,0,\"zeit.fu-berlin.de\"\r\n";
-String ESP32_QUERY_TIMESTAMP 		= "AT+SYSTIMESTAMP?\r\n";
-String ESP32_QUERY_SNTP_TIME 		= "AT+CIPSNTPTIME?\r\n";
-
-String ESP32_SET_MQTT_CONFIG 		= "AT+MQTTUSERCFG=0,1,\"sc36ClientID\",\"emqx\",\"public\",0,0,\"\"\r\n";
-String ESP32_QUERY_MQTT_CONNECTION 	= "AT+MQTTCONN?\r\n";
-String ESP32_SET_MQTT_CONNECTION 	= "AT+MQTTCONN=0,\"broker.emqx.io\",1883,1\r\n";
-String ESP32_CLOSE_MQTT_CONNECTION 	= "AT+MQTTCLEAN=0\r\n";
-
-String ESP32_PUB_MQTT 				= "AT+MQTTPUB=0,\"topic008\",\"hallo broker\",1,0\r\n";
-String ESP32_PUB_RAW_MQTT 			= "AT+MQTTPUBRAW=<LinkID>,<\"topic\">,<length>,<qos>,<retain>\r\n";
-String ESP32_QUERY_SUB_MQTT 		= "AT+MQTTSUB?\r\n";
-String ESP32_SET_SUB_MQTT 			= "AT+MQTTSUB=0,\"topic007\",1\r\n";
-
-/* MQTT Connection Example with web based client
- * https://mqttx.app/web-client#/recent_connections/8dc002fe-dc48-4926-8760-bde4bbb4c859
- * https://www.emqx.com/en/blog/mqtt-client-tools
- * */
-
-// AT+MQTTUSERCFG=0,7,"sc36ClientID","emqx","public",0,0,"mqtt" (uses WSS scheme 7: MQTT over WebSocket Secure (based on TLS, no certificate verify).
-// AT+MQTTCONN=0,"broker.emqx.io",8084,1
-// AT+MQTTSUB=0,"topic007",1
-// AT+MQTTPUB=0,"topic008","hallo broker",1,0
-
-/* another MQTT Connection Example with web based client */
-// AT+MQTTUSERCFG=0,1,"sc36ClientID","emqx","public",0,0,"" (uses TCP sechme 1: MQTT over TCP)
-// AT+MQTTCONN=0,"broker.emqx.io",1883,1
-// AT+MQTTSUB=0,"topic007",1
-// AT+MQTTPUB=0,"topic008","hallo broker",1,0
-
-void esp32_reset(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_RESET, strlen(ESP32_RESET));
-}
-
-void esp32_check_wifi_connection(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_QUERY_WIFI_CONNECTION, strlen(ESP32_QUERY_WIFI_CONNECTION) );
-}
-
-void esp32_connect_to_wifi(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_AP_CONNECTION, strlen(ESP32_SET_AP_CONNECTION));
-}
-
-void esp32_connect_to_sntp(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_SNTP_TIME, strlen(ESP32_SET_SNTP_TIME));
-}
-
-void esp32_config_mqtt_connection(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_MQTT_CONFIG, strlen(ESP32_SET_MQTT_CONFIG));
-}
-
-void esp32_connect_to_mqtt_broker(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_MQTT_CONNECTION, strlen(ESP32_SET_MQTT_CONNECTION));
-}
-
-void esp32_subscribe_to_topic(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_SUB_MQTT, strlen(ESP32_SET_SUB_MQTT));
-}
-void esp32_publish_to_topic(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_PUB_MQTT, strlen(ESP32_PUB_MQTT));
-}
-
-typedef enum{
-	 esp32_error = 0,
-	 esp32_ok,
-	 esp32_timeout,
-	 esp32_idle,
-}esp32_exit_code_t;
-
-typedef enum{
-	undefined = 0,
-	standby,					// 1
-	boot_up,					// 2
-	connect_to_wifi,			// 3
-	config_connection_to_broker,// 4
-	connect_to_mqtt_broker,		// 5
-	subscribe_to_mqtt_msg,		// 6
-	online,						// 7
-	publish_mqtt_msg,			// 8
-	wait_for_response,			// 9
-}MQTT_client_t;
-
-typedef struct {
-	/* public attributes */
-	uint32_t timeout;
-
-	/* private attributes */
-	char at_response_buffer[512];
-	char at_response_to_be[128];
-	uint32_t timeout_start;
-	MQTT_client_t next_state;	// next state aiming to after at_response success (nothing to do with state machine new_state)
-}client_fsm_t;
-
-void esp32_set_needle_for_response(client_fsm_t* client, String at_response, uint32_t timeout){
-	memcpy(client->at_response_to_be, at_response, strlen(at_response));
-	client->timeout = timeout;
-}
-
-void esp32_save_at_response_to_client(client_fsm_t* client ){
-	client->timeout_start = GET_TICK();
-	uint16_t size = head - tail;
-	// todo some how this needs to be kind of fifo buffer as well, since some ESP32 responses have multiple line which will be get overwritten
-	memcpy(client->at_response_buffer, &uart_rx_buffer_internet[tail], size);
-}
-
-esp32_exit_code_t esp32_wait_for_response(client_fsm_t* client){
-	uint32_t tic = GET_TICK();
-
-	// if timeout got hit
-	if( (tic - client->timeout_start) >= client->timeout){
-		printf("\t[debug] - timeout\n");
-		return esp32_timeout;
-	}
-
-	// check if needle was found
-	char *ret = strstr(client->at_response_buffer, client->at_response_to_be);
-	if( ret !=  NULL ){
-		memset(client->at_response_to_be, '\0', 128);
-		memset(client->at_response_buffer, '\0', 512);
-		printf("\t[debug] - hit needle\n");
-		return esp32_ok;
-	}
-
-	// if at phrase ERROR was found
-	ret = strstr(client->at_response_buffer, "ERROR\r\n");
-	if( ret != NULL){
-		memset(client->at_response_to_be, '\0', 128);
-		memset(client->at_response_buffer, '\0', 512);
-		printf("\t[debug] - hit error\n");
-		return esp32_error;
-	}
-
-	// else wait for next call
-	return esp32_idle;
-}
+#include "Drivers/Communication/ESP32AT/esp32at.h"
+#include "Drivers/Communication/ESP32AT/fifo.h"
 
 
-void esp32_mqtt_fsm(client_fsm_t *client) {
-	static MQTT_client_t state = boot_up;
-	MQTT_client_t new_state = standby;
 
-	switch (state) {
-	case undefined:
-		new_state = boot_up;
-		break;
-
-	case standby:
-		new_state = standby;
-		break;
-
-	case boot_up:
-		esp32_reset();
-		client->next_state = connect_to_wifi;
-		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
-		break;
-
-	case connect_to_wifi:
-		esp32_connect_to_wifi();
-		client->next_state = config_connection_to_broker;
-		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "WIFI GOT IP\r\n\r\nOK\r\n", 0xFFFF);
-		break;
-
-	case config_connection_to_broker:
-		esp32_config_mqtt_connection();
-		client->next_state = connect_to_mqtt_broker;
-		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
-		break;
-
-	case connect_to_mqtt_broker:
-		esp32_connect_to_mqtt_broker();
-		client->next_state = subscribe_to_mqtt_msg;
-		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
-		break;
-
-	case subscribe_to_mqtt_msg:
-		esp32_subscribe_to_topic();
-		client->next_state = online;
-		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 5000);
-		break;
-
-	case online:
-		client->next_state = online;
-		new_state = online;
-		break;
-
-	case publish_mqtt_msg:
-		esp32_publish_to_topic();
-		new_state = online;
-		break;
-
-	case wait_for_response:
-		esp32_exit_code_t code = esp32_wait_for_response(client);
-		if( code == esp32_ok){
-			new_state = client->next_state;
-		}else if ( code == esp32_timeout) {
-			new_state = boot_up;
-		}else if( code == esp32_error ){
-			new_state = state;
-		}else{
-			new_state = state;
-		}
-		break;
-
-	default:
-		break;
-	}
-
-	if (new_state != state) {
-		state = new_state;
-	}
-}
 
 client_fsm_t esp32_mqtt_client;
+WiFi_Client_t esp32Client;
+fifo_t esp32_at_cammand;
+
+char* AT_Pointer;
 
 void internet_fsm(void){
 	esp32_mqtt_fsm(&esp32_mqtt_client);
@@ -280,6 +44,14 @@ void internet_fsm(void){
 
 void heart_beat(void){
 	NUCLEO_LED_toggle();
+}
+
+void pub_telemetry(void){
+
+	if(get_fsm_state(&esp32_mqtt_client) == online){
+		set_fsm_state(&esp32_mqtt_client, publish_mqtt_msg);
+	}
+
 }
 
 /* USER CODE END Includes */
@@ -314,28 +86,27 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void uart_increment_pointer(void){
-	head += 1;
-	if(head >= uart_rx_buffer_size){
-		head = 0;
+
+// very short buffer since we reading byte wise
+uint8_t uart_internet_interrupt_buffer[8];
+
+/* STM32 HAL Based UART Bridge with RX-byte (char) interrupt */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if (huart->Instance == UART_INTERNET_INSTANCE){
+		// put every byte to uart_rx_buffer and start interrupt again
+		fifo_put_byte(&esp32_mqtt_client.at_fifo, uart_internet_interrupt_buffer[0]);
+
+		//uart_increment_pointer();
+		UART_INTERNET_READ_BYTE_IRQ( uart_internet_interrupt_buffer );
 	}
 }
 
-void uart_clear_fifo(void){
-	uint16_t size = head - tail;
-	esp32_save_at_response_to_client(&esp32_mqtt_client);
-	memset(&uart_rx_buffer_internet[tail], '\0', size);
-	head = 0;
-	tail = 0;
-	UART_INTERNET_ABORT_IRQ();
-	UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
-}
-
-void uart_rx_complete_callback(void){
-	uint16_t size = head - tail;
-	if( (size > 3) && (uart_rx_buffer_internet[head-1] == '\n') && (uart_rx_buffer_internet[head-2] == '\r') ){
-		UART_TERMINAL_SEND( &uart_rx_buffer_internet[tail], size);
-		uart_clear_fifo();
+/* STM32 HAL Based UART Bridge with RX-line interrupt */
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+	if (huart->Instance == UART_TERMINAL_INSTANCE){
+		// transmit to esp32 what has been received from terminal
+		UART_INTERNET_SEND(uart_rx_buffer_terminal, Size);
+		UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
 	}
 }
 
@@ -348,8 +119,15 @@ void noRTOS_setup(void) {
 	esp32Client.mqtt_password 			= "public";  		// MQTT password for authentication
 	esp32Client.mqtt_port 				= "1883";  			// MQTT port (TCP)
 
+	fifo_init(&esp32_at_cammand);
+	fifo_clear(&esp32_at_cammand);
+
+	// testing for debugging to read buffer content, but still not that great
+	AT_Pointer = esp32_at_cammand.buffer;
+
 	// enable uart RX byte-wise interrupt for ESP32 AT-Command Communication
-	UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
+	//UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
+	UART_INTERNET_READ_BYTE_IRQ( uart_internet_interrupt_buffer );
 
 	// enable uart with DMA interupt for COM port (terminal)
 	UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
@@ -358,32 +136,6 @@ void noRTOS_setup(void) {
 
 /* -------------------------------------------------------------------------------------------------------- */
 
-/* STM32 HAL Based UART Bridge with RX-byte (char) interrupt */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if (huart->Instance == UART_TERMINAL_INSTANCE){
-	}
-
-	if (huart->Instance == UART_INTERNET_INSTANCE){
-		// put every byte to uart_rx_buffer and start interrupt again
-		uart_increment_pointer();
-		UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
-	}
-}
-
-/* STM32 HAL Based UART Bridge with RX-line interrupt */
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
-	if (huart->Instance == UART_TERMINAL_INSTANCE){
-		// transmit to esp32 what has been received from terminal
-		UART_INTERNET_SEND(uart_rx_buffer_terminal, Size);
-		UART_TERMINAL_READ_LINE_IRQ( uart_rx_buffer_terminal, uart_rx_buffer_size);
-	}
-
-	if (huart->Instance == UART_INTERNET_INSTANCE){
-		// transmit to terminal what has been received from esp32
-		UART_TERMINAL_SEND(uart_rx_buffer_internet, Size);
-		UART_INTERNET_READ_LINE_IRQ( uart_rx_buffer_internet, uart_rx_buffer_size );
-	}
-}
 
 /* USER CODE END 0 */
 
@@ -421,14 +173,14 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  noRTOS_task_t uart_calback_t = {.delay = eNORTOS_PERIODE_100ms, .task_callback = uart_rx_complete_callback};
-  noRTOS_add_task_to_scheduler(&uart_calback_t);
-
   noRTOS_task_t internet_fsm_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = internet_fsm};
   noRTOS_add_task_to_scheduler(&internet_fsm_t);
 
   noRTOS_task_t heartbeat_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = heart_beat};
   noRTOS_add_task_to_scheduler(&heartbeat_t);
+
+  noRTOS_task_t pub_telemetry_t = {.delay = eNORTOS_PERIODE_10s, .task_callback = pub_telemetry};
+  noRTOS_add_task_to_scheduler(&pub_telemetry_t);
 
 
   noRTOS_run_scheduler();
