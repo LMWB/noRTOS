@@ -31,7 +31,7 @@
 
 #define NUCLEO_LED_turn_on()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1)
 #define NUCLEO_LED_turn_off()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0)
-#define NUCLEO_LED_turn_toggle()	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
+#define NUCLEO_LED_toggle()			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
 
 
 /* *** UART ***************************************************************** */

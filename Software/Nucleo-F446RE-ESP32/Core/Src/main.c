@@ -50,7 +50,8 @@ WiFi_Client_t esp32Client;
 String ESP32_RESET					= "AT+RST\r\n";
 String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?\r\n";
 String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?\r\n";
-String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"\r\n";
+//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"\r\n";
+String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
 String ES32_QUERY_IP 				= "AT+CIFSR\r\n";
 
 String ESP32_PING 					= "AT+PING=\"www.google.de\"\r\n";
@@ -273,10 +274,13 @@ void esp32_mqtt_fsm(client_fsm_t *client) {
 
 client_fsm_t esp32_mqtt_client;
 
-void test_fsm(void){
+void internet_fsm(void){
 	esp32_mqtt_fsm(&esp32_mqtt_client);
 }
 
+void heart_beat(void){
+	NUCLEO_LED_toggle();
+}
 
 /* USER CODE END Includes */
 
@@ -337,8 +341,8 @@ void uart_rx_complete_callback(void){
 
 void noRTOS_setup(void) {
 
-	esp32Client.wifi_ssid 		= "VodafoneMobileWiFi-6B18C9";
-	esp32Client.wifi_password 	= "wGkH536785";
+	esp32Client.wifi_ssid 				= "ssid";
+	esp32Client.wifi_password 			= "password";
 	esp32Client.mqtt_broker_endpoint 	= "broker.emqx.io";  // EMQX broker endpoint
 	esp32Client.mqtt_username 			= "emqx";  			// MQTT username for authentication
 	esp32Client.mqtt_password 			= "public";  		// MQTT password for authentication
@@ -420,8 +424,12 @@ int main(void)
   noRTOS_task_t uart_calback_t = {.delay = eNORTOS_PERIODE_100ms, .task_callback = uart_rx_complete_callback};
   noRTOS_add_task_to_scheduler(&uart_calback_t);
 
-  noRTOS_task_t check_connection_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = test_fsm};
-  noRTOS_add_task_to_scheduler(&check_connection_t);
+  noRTOS_task_t internet_fsm_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = internet_fsm};
+  noRTOS_add_task_to_scheduler(&internet_fsm_t);
+
+  noRTOS_task_t heartbeat_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = heart_beat};
+  noRTOS_add_task_to_scheduler(&heartbeat_t);
+
 
   noRTOS_run_scheduler();
   /* USER CODE END 2 */
