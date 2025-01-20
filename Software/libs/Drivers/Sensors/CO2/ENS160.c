@@ -28,8 +28,6 @@ void ens160_init(void) {
 
 }
 
-
-
 // todo printf muss weg
 void ens160_translate_status_byte(uint8_t status_byte){
 	uint8_t NEWGPR;
@@ -49,4 +47,24 @@ void ens160_translate_status_byte(uint8_t status_byte){
 	if(STATER) printf("Error is present, ");
 	if(STATAS) printf("OPMODE is running");
 	printf("\n");
+}
+
+void ens160s_sample_data(ens160_data_t* sensor) {
+	uint16_t eCO2 = 0;
+	uint16_t temperature = 0;
+	uint16_t relative_humidity = 0;
+	uint8_t status = 0;
+	ens160_i2c_read_register(ENS160_DATA_STATUS, &status, 1);
+	ens160_i2c_read_register(ENS160_DATA_ECO2, (uint8_t*) &eCO2, 2);
+	ens160_i2c_read_register(ENS160_DATA_T, (uint8_t*) &temperature, 2);
+	ens160_i2c_read_register(ENS160_DATA_RH, (uint8_t*) &relative_humidity, 2);
+	ens160_translate_status_byte(status);
+	sensor->eCO2 = eCO2;
+	sensor->temperature = temperature;
+	sensor->humidity = relative_humidity;
+	sensor->status = status;
+
+	//printf("ENS160 CO2: %d\n", eCO2);
+	//printf("ENS160 Temperature: %d\n", temperature);
+	//printf("ENS160 Humidity: %d\n", relative_humidity);
 }

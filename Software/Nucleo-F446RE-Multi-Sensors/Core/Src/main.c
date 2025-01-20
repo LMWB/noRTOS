@@ -21,6 +21,7 @@
   * ENS160		@ 0x52
   * AHT21		@ 0x38
   *
+  * https://github.com/sciosense/CCS811_driver?tab=readme-ov-file
   *
   *
   *
@@ -74,7 +75,9 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-ccs811_data_t myCCS811 = {};
+ccs811_data_t 	myCCS811 = {};
+scd4x_data_t 	mySCD4x = {};
+ens160_data_t 	myENS160 = {};
 
 void blinky(void){
 	NUCLEO_LED_toggle();
@@ -87,51 +90,23 @@ void sample_temp_hum(void){
 }
 
 void sample_ens160(void){
-	uint16_t eCO2 = 0;
-	uint16_t temperature = 0;
-	uint16_t rleative_humidity = 0;
-	uint8_t status = 0;
-	ens160_i2c_read_register(ENS160_DATA_STATUS, &status, 1);
-	ens160_i2c_read_register(ENS160_DATA_ECO2, (uint8_t*) &eCO2, 2);
-	ens160_i2c_read_register(ENS160_DATA_T, (uint8_t*) &temperature, 2);
-	ens160_i2c_read_register(ENS160_DATA_RH, (uint8_t*) &rleative_humidity, 2);
-
-	ens160_translate_status_byte(status);
-	printf("ENS160 CO2: %d\n", eCO2);
-	printf("ENS160 Temperature: %d\n", temperature);
-	printf("ENS160 Humidity: %d\n", rleative_humidity);
+	ens160s_sample_data(&myENS160);
 }
 
 void sample_ccs811(void){
-
 	ccs811_sample_data(&myCCS811);
-
 }
 
 void sample_scd4x(void){
-	bool data_ready_flag = false;
-	scd4x_get_data_ready_flag(&data_ready_flag);
-	if (!data_ready_flag) {
-		return;
-	}else{
-		uint16_t co2;
-		int32_t temperature;
-		int32_t humidity;
-		scd4x_read_measurement(&co2, &temperature, &humidity);
-		printf("SCD4x-CO2: %u\n", co2);
-		printf("SCD4x-Temperature: %ld milli Grad C\n", temperature);
-		printf("SCD4x-Humidity: %ld mRH\n", humidity);
-	}
+	scd4x_sample_data(&mySCD4x);
 }
 
 void noRTOS_setup(void) {
 	NUCLEO_LED_turn_on();
 	scan_i2c_sensors();
-
 	ens160_init();
 	ccs811_init();
 	sdc4x_init();
-
 	NUCLEO_LED_turn_off();
 }
 

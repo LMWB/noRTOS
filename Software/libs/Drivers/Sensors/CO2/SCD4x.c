@@ -159,3 +159,23 @@ void scd4x_read_measurement(uint16_t *co2, int32_t *temperature_m_deg_c, int32_t
 	*temperature_m_deg_c = ((21875 * (int32_t) local_temperature) >> 13) - 45000;
 	*humidity_m_percent_rh = ((12500 * (int32_t) local_humidity) >> 13);
 }
+
+void scd4x_sample_data(scd4x_data_t* sensor){
+	bool data_ready_flag = false;
+	scd4x_get_data_ready_flag(&data_ready_flag);
+	if (!data_ready_flag) {
+		return;
+	}else{
+		uint16_t co2;
+		int32_t temperature;
+		int32_t humidity;
+		scd4x_read_measurement(&co2, &temperature, &humidity);
+		sensor->eCO2 = co2;
+		sensor->temperature = temperature;
+		sensor->humidity = humidity;
+
+		//printf("SCD4x-CO2: %u\n", co2);
+		//printf("SCD4x-Temperature: %ld milli Grad C\n", temperature);
+		//printf("SCD4x-Humidity: %ld mRH\n", humidity);
+	}
+}

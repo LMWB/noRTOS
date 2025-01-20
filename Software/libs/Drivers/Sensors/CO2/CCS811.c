@@ -145,12 +145,12 @@ void ccs811_init(void){
 	error_ID = error_ID;
 }
 
-void ccs811_sample_data(ccs811_data_t* data){
+void ccs811_sample_data(ccs811_data_t* sensor){
 	// read 8 byte of data register, if byte 4 bit 3 (status byte data valid bit) is true, data is valid
 	uint8_t alg_result_data[8] = {0};
 	ccs811_i2c_read_register(ALG_RESULT_DATA, alg_result_data, 8);
-	data->eCO2 		= (alg_result_data[0] << 8) | alg_result_data[1];
-	data->voc 		= (alg_result_data[2] << 8) | alg_result_data[3];
-	data->status 	= alg_result_data[4];
-	data->errorID 	= alg_result_data[5];
+	sensor->eCO2 		= (alg_result_data[0] << 8) | alg_result_data[1];
+	sensor->voc 		= (alg_result_data[2] << 8) | alg_result_data[3];
+	sensor->status 	= alg_result_data[4];
+	sensor->errorID 	= alg_result_data[5];
 }

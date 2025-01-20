@@ -19,15 +19,15 @@ typedef struct _ens160_data{
 	uint32_t voc;
 	uint32_t temperature;
 	uint32_t humidity;
+	uint8_t status;
 }ens160_data_t;
 
 void ens160_i2c_read_register(uint8_t register_address, uint8_t* data, uint16_t length);
 void ens160_i2c_write_register(uint8_t register_address, uint8_t* data, uint16_t length);
 
 void ens160_init(void);
-void ens160s_sample_data(ens160_data_t* data);
 void ens160_translate_status_byte(uint8_t status_byte);
-
+void ens160s_sample_data(ens160_data_t* sensor);
 
 
 

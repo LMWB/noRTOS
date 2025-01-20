@@ -34,6 +34,6 @@ uint8_t ccs811_read_result_registers(uint8_t* result_bytes, uint8_t size);
 uint8_t ccs811_read_environment_data_registers(uint8_t* env_bytes, uint8_t size);
 uint8_t ccs811_write_environment_data_registers(uint8_t* env_bytes, uint8_t size);
 
-void ccs811_sample_data(ccs811_data_t* data);
+void ccs811_sample_data(ccs811_data_t* sensor);
 
 #endif /* DRIVERS_SENSORS_CO2_CCS811_H_ */
