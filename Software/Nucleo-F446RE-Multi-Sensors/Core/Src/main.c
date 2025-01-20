@@ -145,7 +145,6 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   MX_I2C1_Init();
-
   /* USER CODE BEGIN 2 */
   noRTOS_task_t blinky_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = blinky};
   noRTOS_add_task_to_scheduler(&blinky_t);
