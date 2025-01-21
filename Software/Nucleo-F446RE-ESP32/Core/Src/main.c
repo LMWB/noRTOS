@@ -49,7 +49,7 @@ void heart_beat(void){
 void pub_telemetry(void){
 
 	if(get_fsm_state(&esp32_mqtt_client) == online){
-		set_fsm_state(&esp32_mqtt_client, publish_mqtt_msg);
+		set_fsm_state(&esp32_mqtt_client, publish_raw_mqtt_msg);
 	}
 
 }
@@ -173,13 +173,13 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  noRTOS_task_t internet_fsm_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = internet_fsm};
+  noRTOS_task_t internet_fsm_t = {.delay = eNORTOS_PERIODE_500ms, .task_callback = internet_fsm};
   noRTOS_add_task_to_scheduler(&internet_fsm_t);
 
   noRTOS_task_t heartbeat_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = heart_beat};
   noRTOS_add_task_to_scheduler(&heartbeat_t);
 
-  noRTOS_task_t pub_telemetry_t = {.delay = eNORTOS_PERIODE_10s, .task_callback = pub_telemetry};
+  noRTOS_task_t pub_telemetry_t = {.delay = eNORTOS_PERIODE_30s, .task_callback = pub_telemetry};
   noRTOS_add_task_to_scheduler(&pub_telemetry_t);
 
 

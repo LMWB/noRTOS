@@ -44,7 +44,8 @@ typedef enum{
 	subscribe_to_mqtt_msg,		// 6
 	online,						// 7
 	publish_mqtt_msg,			// 8
-	wait_for_response,			// 9
+	publish_raw_mqtt_msg,		// 9
+	wait_for_response,			// 10
 }MQTT_client_t;
 
 typedef struct {

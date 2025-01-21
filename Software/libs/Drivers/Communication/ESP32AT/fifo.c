@@ -15,8 +15,11 @@ void fifo_clear(fifo_t* fifo){
 void fifo_put_byte(fifo_t* fifo, uint8_t byte){
 	fifo->buffer[fifo->head] = byte;
 	fifo->head++;
+	if(fifo->head >= FIFO_BUFFER_SIZE){
+		fifo->head=0;
+	}
 }
 
 uint8_t fifo_pop_byte(fifo_t* fifo){
-	;;;
+	return 0;
 }
