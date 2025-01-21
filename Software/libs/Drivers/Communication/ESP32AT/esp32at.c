@@ -53,11 +53,14 @@ String ESP32_SET_MQTT_CONNECTION 	= "AT+MQTTCONN=0,\"broker.emqx.io\",1883,1\r\n
 String ESP32_CLOSE_MQTT_CONNECTION 	= "AT+MQTTCLEAN=0\r\n";
 
 String ESP32_PUB_MQTT 				= "AT+MQTTPUB=0,\"topic008\",\"hallo broker new fsm\",1,0\r\n";
-String ESP32_PUB_RAW_MQTT 			= "AT+MQTTPUBRAW=0,\"topic008\",36,1,0\r\n";
-String ESP32_PUB_RAW_MQTT_PAYLOAD	= "das ist eine telemtry packet dummy\r\n";
+String ESP32_PUB_RAW_MQTT 			= "AT+MQTTPUBRAW=0,\"topic008\",20,1,0\r\n";
+//String ESP32_PUB_RAW_MQTT_PAYLOAD	= "das ist eine telemtry packet dummy\r\n";
+char ESP32_PUB_RAW_MQTT_PAYLOAD[]	= {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
 
 String ESP32_QUERY_SUB_MQTT 		= "AT+MQTTSUB?\r\n";
 String ESP32_SET_SUB_MQTT 			= "AT+MQTTSUB=0,\"topic007\",1\r\n";
+
+String ESP32_SUB_REC_MQTT			= "+MQTTSUBRECV:";
 
 
 
@@ -88,6 +91,21 @@ void esp32_connect_to_mqtt_broker(){
 void esp32_subscribe_to_topic(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_SUB_MQTT, strlen(ESP32_SET_SUB_MQTT));
 }
+
+esp32_exit_code_t esp32_check_for_sub_receive(client_fsm_t *client) {
+	// check if needle was found
+	char *ret = strstr((char*) client->at_fifo.buffer, ESP32_SUB_REC_MQTT);
+
+	if (ret != NULL) {
+		// debug messages
+		printf("\t[debug] - hit needle\n");
+		// echo to terminal
+		UART_TERMINAL_SEND(client->at_fifo.buffer, client->at_fifo.head);
+		return esp32_ok;
+	}
+	return esp32_idle;
+}
+
 void esp32_publish_to_topic(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_PUB_MQTT, strlen(ESP32_PUB_MQTT));
 }
@@ -211,8 +229,21 @@ void esp32_mqtt_fsm(client_fsm_t *client) {
 
 	case online:
 		printf("Online \n");
-		client->next_state = online;
-		new_state = online;
+		esp32_exit_code_t did_recieve_something = esp32_check_for_sub_receive(client);
+		if(did_recieve_something == esp32_ok){
+			// todo
+			// process mqtt received message
+
+			// clear at-command rx-buffer
+			fifo_clear(&client->at_fifo);
+
+			// Continue in state machine
+			client->next_state = online;
+			new_state = online;
+		}else{
+			client->next_state = online;
+			new_state = online;
+		}
 		break;
 
 	case publish_mqtt_msg:
