@@ -28,15 +28,23 @@
 #include "hardwareGlobal.h"
 #include "Drivers/Communication/ESP32AT/esp32at.h"
 #include "Drivers/Communication/ESP32AT/fifo.h"
-
+#include "math.h"
 
 
 
 client_fsm_t esp32_mqtt_client;
-WiFi_Client_t esp32Client;
+WiFi_Client_t esp32Client;     // todo not in use yet, merge with 'client_fsm_t esp32_mqtt_client'
 fifo_t esp32_at_cammand;
 
-char* AT_Pointer;
+typedef struct{
+	float sin;
+	float cos;
+	float tan;
+	uint32_t time;
+	uint32_t date;
+}application_output;
+
+application_output app = {0};
 
 void internet_fsm(void){
 	esp32_mqtt_fsm(&esp32_mqtt_client);
@@ -48,10 +56,41 @@ void heart_beat(void){
 
 void pub_telemetry(void){
 
+	char payload[128];
+	uint16_t size = 0;
+	size = sprintf(payload, "{\"sin\": %.2f, \"cos\": %.2f, \"tan\": %.2f}", app.sin, app.cos, app.tan);
+	printf("Telemetry [%d bytes] Payload: %s\n", size, payload);
+
 	if(get_fsm_state(&esp32_mqtt_client) == online){
 		set_fsm_state(&esp32_mqtt_client, publish_raw_mqtt_msg);
 	}
 
+}
+
+/* just a heave task to keep the cpu biusi and test "real time" */
+void control_algorithm(void){
+	uint32_t now_sec = GET_TICK() / 1000.0;
+	float amp = 30.0;
+	float f = 1/3600.0; // f = 1/T, T = 1h = 3600sec = 3.600.000 ms
+	float max = 70.0;
+	float min = -10.0;
+	float sin = sinf( 2*M_PI*f * (float)(now_sec)) * amp;
+	float cos = cosf( 2*M_PI*f * (float)(now_sec)) * amp;
+	float tan = tanf( 2*M_PI*f * (float)(now_sec)) * amp;
+
+	/* catch min/max boundaries */
+	if(sin > max) sin = max;
+	if(sin < min) sin = min;
+	if(cos > max) cos = max;
+	if(cos < min) cos = min;
+	if(tan > max) tan = max;
+	if(tan < min) tan = min;
+
+	app.sin = sin;
+	app.cos = cos;
+	app.tan = tan;
+
+	printf(" -- Hello World -- \n");
 }
 
 /* USER CODE END Includes */
@@ -122,9 +161,6 @@ void noRTOS_setup(void) {
 	fifo_init(&esp32_at_cammand);
 	fifo_clear(&esp32_at_cammand);
 
-	// testing for debugging to read buffer content, but still not that great
-	AT_Pointer = esp32_at_cammand.buffer;
-
 	// enable uart RX byte-wise interrupt for ESP32 AT-Command Communication
 	//UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
 	UART_INTERNET_READ_BYTE_IRQ( uart_internet_interrupt_buffer );
@@ -179,11 +215,14 @@ int main(void)
   noRTOS_task_t heartbeat_t = {.delay = eNORTOS_PERIODE_1s, .task_callback = heart_beat};
   noRTOS_add_task_to_scheduler(&heartbeat_t);
 
+  noRTOS_task_t application_t = {.delay = eNORTOS_PERIODE_10s, .task_callback = control_algorithm};
+  noRTOS_add_task_to_scheduler(&application_t);
+
   noRTOS_task_t pub_telemetry_t = {.delay = eNORTOS_PERIODE_30s, .task_callback = pub_telemetry};
   noRTOS_add_task_to_scheduler(&pub_telemetry_t);
 
-
   noRTOS_run_scheduler();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
