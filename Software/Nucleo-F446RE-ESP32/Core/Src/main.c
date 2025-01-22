@@ -13,6 +13,20 @@
   * in the root directory of this software component.
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
+  *
+  *
+  *
+  *
+  * Hardware:
+  * smart-hub-100 PCB with Nucleo-F446RE and soldered ESP32
+  *
+  *
+  * Todo
+  * - add several sub topics
+  * - send 'real' telemetry, currently static string
+  *
+  *
+  *
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -50,6 +64,41 @@ void internet_fsm(void){
 	esp32_mqtt_fsm(&esp32_mqtt_client);
 }
 
+void led_snake(void){
+	static uint8_t step = 0;
+
+	switch (step) {
+		case 0:
+			HAL_GPIO_WritePin(	USER_LED1_GPIO_Port, USER_LED1_Pin, GPIO_PIN_SET);
+			break;
+		case 1:
+			HAL_GPIO_WritePin(	USER_LED2_GPIO_Port, USER_LED2_Pin, GPIO_PIN_SET);
+			break;
+		case 2:
+			HAL_GPIO_WritePin(	USER_LED3_GPIO_Port, USER_LED3_Pin, GPIO_PIN_SET);
+			break;
+		case 3:
+			HAL_GPIO_WritePin(	USER_LED4_GPIO_Port, USER_LED4_Pin, GPIO_PIN_SET);
+			break;
+		case 4:
+			HAL_GPIO_WritePin(	USER_LED4_GPIO_Port, USER_LED4_Pin, GPIO_PIN_RESET);
+			break;
+		case 5:
+			HAL_GPIO_WritePin(	USER_LED3_GPIO_Port, USER_LED3_Pin, GPIO_PIN_RESET);
+			break;
+		case 6:
+			HAL_GPIO_WritePin(	USER_LED2_GPIO_Port, USER_LED2_Pin, GPIO_PIN_RESET);
+			break;
+		case 7:
+			HAL_GPIO_WritePin(	USER_LED1_GPIO_Port, USER_LED1_Pin, GPIO_PIN_RESET);
+			break;
+		default:
+			break;
+	}
+	step ++;
+	if(step > 7) step = 0;
+}
+
 void heart_beat(void){
 	NUCLEO_LED_toggle();
 }
@@ -67,7 +116,7 @@ void pub_telemetry(void){
 
 }
 
-/* just a heave task to keep the cpu biusi and test "real time" */
+/* just a heave task to keep the cpu busy and test "real time" */
 void control_algorithm(void){
 	uint32_t now_sec = GET_TICK() / 1000.0;
 	float amp = 30.0;
@@ -208,6 +257,9 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  noRTOS_task_t led_snake_t = {.delay = eNORTOS_PERIODE_200ms, .task_callback = led_snake};
+  noRTOS_add_task_to_scheduler(&led_snake_t);
 
   noRTOS_task_t internet_fsm_t = {.delay = eNORTOS_PERIODE_500ms, .task_callback = internet_fsm};
   noRTOS_add_task_to_scheduler(&internet_fsm_t);
