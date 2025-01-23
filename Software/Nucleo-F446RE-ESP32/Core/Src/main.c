@@ -107,7 +107,7 @@ void pub_telemetry(void){
 
 	char payload[128];
 	uint16_t size = 0;
-	size = sprintf(payload, "{\"sin\": %.2f, \"cos\": %.2f, \"tan\": %.2f}", app.sin, app.cos, app.tan);
+	size = sprintf(payload, "{\"sin\":%.2f,\"cos\":%.2f,\"tan\":%.2f}", app.sin, app.cos, app.tan);
 	printf("Telemetry [%d bytes] Payload: %s\n", size, payload);
 	memcpy(esp32_mqtt_client.at_pub_payload, payload, size);
 	esp32_mqtt_client.at_pub_payload_size = size;

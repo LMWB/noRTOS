@@ -36,8 +36,8 @@ String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?\r\n";
 String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?\r\n";
 
 //String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"\r\n";
-String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
-//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"iPhone11\",\"abc123456\"\r\n";
+//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
+String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"iPhone11\",\"abc123456\"\r\n";
 
 String ES32_QUERY_IP 				= "AT+CIFSR\r\n";
 
@@ -59,10 +59,11 @@ char ESP32_PUB_RAW_MQTT_PAYLOAD[]	= {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,1
 
 String ESP32_QUERY_SUB_MQTT 		= "AT+MQTTSUB?\r\n";
 String ESP32_SET_SUB_MQTT 			= "AT+MQTTSUB=0,\"jiKEBRupldriwltofSUB/trigonometry\",1\r\n";
-
 String ESP32_SUB_REC_MQTT			= "+MQTTSUBRECV:";
-
-
+#define TOTAL_TOPICS_SUBSCRIBE_TO 5
+String sub_topics[TOTAL_TOPICS_SUBSCRIBE_TO] = {
+		"jiKEBRupldriwltofSUB1/button", "jiKEBRupldriwltofSUB2/slider",
+		"jiKEBRupldriwltofSUB3/raw", "jiKEBRupldriwltofSUB4/bin", "jiKEBRupldriwltofSUB5/string"};
 
 void esp32_reset(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_RESET, strlen(ESP32_RESET));
@@ -88,8 +89,11 @@ void esp32_connect_to_mqtt_broker(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_MQTT_CONNECTION, strlen(ESP32_SET_MQTT_CONNECTION));
 }
 
-void esp32_subscribe_to_topic(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_SUB_MQTT, strlen(ESP32_SET_SUB_MQTT));
+void esp32_subscribe_to_topic(uint8_t topic_in_list){
+	char sub_buffer[128];
+	uint16_t size = sprintf(sub_buffer, "AT+MQTTSUB=0,\"%s\",1\r\n", sub_topics[topic_in_list]);
+
+	UART_INTERNET_SEND( (uint8_t*)sub_buffer, size);
 }
 
 esp32_exit_code_t esp32_check_for_sub_receive(client_fsm_t *client) {
@@ -185,10 +189,12 @@ void esp32_mqtt_fsm(client_fsm_t *client) {
 	MQTT_client_t new_state = standby;
 	switch (state) {
 	case undefined:
+		printf("Undefined \n");
 		new_state = boot_up;
 		break;
 
 	case standby:
+		printf("Standby \n");
 		new_state = standby;
 		break;
 
@@ -226,8 +232,15 @@ void esp32_mqtt_fsm(client_fsm_t *client) {
 
 	case subscribe_to_mqtt_msg:
 		printf("Subscribe to topic\n");
-		esp32_subscribe_to_topic();
-		client->next_state = online;
+		static uint8_t subscribes_done = 0;
+		esp32_subscribe_to_topic(subscribes_done);
+		subscribes_done += 1;
+		if(subscribes_done < TOTAL_TOPICS_SUBSCRIBE_TO){
+			client->next_state = subscribe_to_mqtt_msg;
+		}else{
+			client->next_state = online;
+			subscribes_done = 0;
+		}
 		new_state = wait_for_response;
 		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
 		break;
