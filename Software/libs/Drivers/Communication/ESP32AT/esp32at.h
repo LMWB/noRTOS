@@ -55,6 +55,8 @@ typedef struct {
 
 	/* private attributes */
 	char at_response_to_be[128];
+	char at_pub_payload[128];
+	uint16_t at_pub_payload_size;
 	uint32_t timeout_start;
 	MQTT_client_t next_state;	// next state aiming to after at_response success (nothing to do with state machine new_state)
 }client_fsm_t;

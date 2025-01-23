@@ -52,13 +52,13 @@ String ESP32_QUERY_MQTT_CONNECTION 	= "AT+MQTTCONN?\r\n";
 String ESP32_SET_MQTT_CONNECTION 	= "AT+MQTTCONN=0,\"broker.emqx.io\",1883,1\r\n";
 String ESP32_CLOSE_MQTT_CONNECTION 	= "AT+MQTTCLEAN=0\r\n";
 
-String ESP32_PUB_MQTT 				= "AT+MQTTPUB=0,\"topic008\",\"hallo broker new fsm\",1,0\r\n";
-String ESP32_PUB_RAW_MQTT 			= "AT+MQTTPUBRAW=0,\"topic008\",20,1,0\r\n";
+String ESP32_PUB_MQTT 				= "AT+MQTTPUB=0,\"jiKEBRupldriwltofPUB/trigonometry\",\"hallo broker new fsm\",1,0\r\n";
+String ESP32_PUB_RAW_MQTT 			= "AT+MQTTPUBRAW=0,\"jiKEBRupldriwltofPUB/trigonometry\",40,1,0\r\n";
 //String ESP32_PUB_RAW_MQTT_PAYLOAD	= "das ist eine telemtry packet dummy\r\n";
 char ESP32_PUB_RAW_MQTT_PAYLOAD[]	= {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
 
 String ESP32_QUERY_SUB_MQTT 		= "AT+MQTTSUB?\r\n";
-String ESP32_SET_SUB_MQTT 			= "AT+MQTTSUB=0,\"topic007\",1\r\n";
+String ESP32_SET_SUB_MQTT 			= "AT+MQTTSUB=0,\"jiKEBRupldriwltofSUB/trigonometry\",1\r\n";
 
 String ESP32_SUB_REC_MQTT			= "+MQTTSUBRECV:";
 
@@ -110,10 +110,15 @@ void esp32_publish_to_topic(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_PUB_MQTT, strlen(ESP32_PUB_MQTT));
 }
 
-void esp32_publish_raw_to_topic(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_PUB_RAW_MQTT, strlen(ESP32_PUB_RAW_MQTT));
+void esp32_publish_raw_to_topic(client_fsm_t* client){
+
+	char pub_raw_string[128];
+	uint16_t size = sprintf(pub_raw_string,
+			"AT+MQTTPUBRAW=0,\"jiKEBRupldriwltofPUB/trigonometry\",%d,1,0\r\n",
+			client->at_pub_payload_size);
+	UART_INTERNET_SEND( (uint8_t*)pub_raw_string, size);
 	DELAY(100);
-	UART_INTERNET_SEND( (uint8_t*)ESP32_PUB_RAW_MQTT_PAYLOAD, strlen(ESP32_PUB_RAW_MQTT_PAYLOAD));
+	UART_INTERNET_SEND( (uint8_t*)client->at_pub_payload, client->at_pub_payload_size);
 }
 
 void esp32_set_needle_for_response(client_fsm_t* client, String at_response, uint32_t timeout){
@@ -256,7 +261,7 @@ void esp32_mqtt_fsm(client_fsm_t *client) {
 
 	case publish_raw_mqtt_msg:
 		printf("Publishing Raw\n");
-		esp32_publish_raw_to_topic();
+		esp32_publish_raw_to_topic(client);
 		client->next_state = online;
 		new_state = wait_for_response;
 		esp32_set_needle_for_response(client, "+MQTTPUB:OK\r\n", 0xFFFF);
