@@ -35,12 +35,10 @@ String ESP32_RESET					= "AT+RST\r\n";
 String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?\r\n";
 String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?\r\n";
 
-//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"\r\n";
 String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
 //String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"iPhone11\",\"abc123456\"\r\n";
 
 String ES32_QUERY_IP 				= "AT+CIFSR\r\n";
-
 String ESP32_PING 					= "AT+PING=\"www.google.de\"\r\n";
 
 String ESP32_SET_SNTP_TIME 			= "AT+CIPSNTPCFG=1,0,\"zeit.fu-berlin.de\"\r\n";
@@ -65,6 +63,8 @@ String sub_topics[TOTAL_TOPICS_SUBSCRIBE_TO] = {
 		"jiKEBRupldriwltofSUB1/button", "jiKEBRupldriwltofSUB2/slider",
 		"jiKEBRupldriwltofSUB3/raw", "jiKEBRupldriwltofSUB4/bin", "jiKEBRupldriwltofSUB5/string"};
 
+static char at_working_buffer[128];
+
 void esp32_reset(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_RESET, strlen(ESP32_RESET));
 }
@@ -73,8 +73,9 @@ void esp32_check_wifi_connection(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_QUERY_WIFI_CONNECTION, strlen(ESP32_QUERY_WIFI_CONNECTION) );
 }
 
-void esp32_connect_to_wifi(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_AP_CONNECTION, strlen(ESP32_SET_AP_CONNECTION));
+void esp32_connect_to_wifi(mqtt_client_t *client){
+	uint16_t size = sprintf(at_working_buffer, "AT+CWJAP=\"%s\",\"%s\"\r\n", client->wifi_ssid, client->wifi_password);
+	UART_INTERNET_SEND( (uint8_t*)at_working_buffer, size);
 }
 
 void esp32_connect_to_sntp(){
@@ -90,10 +91,8 @@ void esp32_connect_to_mqtt_broker(){
 }
 
 void esp32_subscribe_to_topic(uint8_t topic_in_list){
-	char sub_buffer[128];
-	uint16_t size = sprintf(sub_buffer, "AT+MQTTSUB=0,\"%s\",1\r\n", sub_topics[topic_in_list]);
-
-	UART_INTERNET_SEND( (uint8_t*)sub_buffer, size);
+	uint16_t size = sprintf(at_working_buffer, "AT+MQTTSUB=0,\"%s\",1\r\n", sub_topics[topic_in_list]);
+	UART_INTERNET_SEND( (uint8_t*)at_working_buffer, size);
 }
 
 mqtt_client_exit_code_t esp32_check_for_sub_receive(mqtt_client_t *client) {
@@ -115,12 +114,10 @@ void esp32_publish_to_topic(){
 }
 
 void esp32_publish_raw_to_topic(mqtt_client_t* client){
-
-	char pub_raw_string[128];
-	uint16_t size = sprintf(pub_raw_string,
+	uint16_t size = sprintf(at_working_buffer,
 			"AT+MQTTPUBRAW=0,\"jiKEBRupldriwltofPUB/trigonometry\",%d,1,0\r\n",
 			client->at_pub_payload_size);
-	UART_INTERNET_SEND( (uint8_t*)pub_raw_string, size);
+	UART_INTERNET_SEND( (uint8_t*)at_working_buffer, size);
 	DELAY(100);
 	UART_INTERNET_SEND( (uint8_t*)client->at_pub_payload, client->at_pub_payload_size);
 }
@@ -208,7 +205,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 
 	case connect_to_wifi:
 		printf("connecting to Wifi\n");
-		esp32_connect_to_wifi();
+		esp32_connect_to_wifi(client);
 		client->next_state = config_connection_to_broker;
 		new_state = wait_for_response;
 		esp32_set_needle_for_response(client, "WIFI GOT IP\r\n\r\nOK\r\n", 0xFFFF);

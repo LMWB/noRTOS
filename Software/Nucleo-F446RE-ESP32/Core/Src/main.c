@@ -202,8 +202,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 void noRTOS_setup(void) {
 
 	// start mqtt client by giving credentials
-	esp32_mqtt_client.wifi_ssid 			= "ssid";
-	esp32_mqtt_client.wifi_password 		= "password";
+	esp32_mqtt_client.wifi_ssid 			= "hot-spot"; 		// iPhone11
+	esp32_mqtt_client.wifi_password 		= "JKp8636785"; 	// abc123456
 	esp32_mqtt_client.mqtt_broker_endpoint 	= "broker.emqx.io"; // EMQX broker endpoint
 	esp32_mqtt_client.mqtt_username 		= "emqx";  			// MQTT username for authentication
 	esp32_mqtt_client.mqtt_password 		= "public";  		// MQTT password for authentication
