@@ -69,6 +69,8 @@ void Error_Handler(void);
 #define USER_LED1_GPIO_Port GPIOB
 #define USER_LED2_Pin GPIO_PIN_2
 #define USER_LED2_GPIO_Port GPIOB
+#define ESP32_RST_Pin GPIO_PIN_8
+#define ESP32_RST_GPIO_Port GPIOC
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14

@@ -66,7 +66,12 @@ String sub_topics[TOTAL_TOPICS_SUBSCRIBE_TO] = {
 static char at_working_buffer[128];
 
 void esp32_reset(){
-	UART_INTERNET_SEND( (uint8_t*)ESP32_RESET, strlen(ESP32_RESET));
+	HAL_GPIO_WritePin(ESP32_RST_GPIO_Port, ESP32_RST_Pin, 0);
+	DELAY(200);
+	HAL_GPIO_WritePin(ESP32_RST_GPIO_Port, ESP32_RST_Pin, 1);
+	DELAY(200);
+	// alternative send RST AT-Command
+	//UART_INTERNET_SEND( (uint8_t*)ESP32_RESET, strlen(ESP32_RESET));
 }
 
 void esp32_check_wifi_connection(){
