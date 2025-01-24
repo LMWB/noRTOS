@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "fifo.h"
 
-/* Temporaer */
+/* Temporaer todo remove this */
 #define __1KByte__ 1024
 #define uart_rx_buffer_size (__1KByte__)
 
@@ -14,25 +14,12 @@ extern uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size];
 /* Temporaer */
 
 
-
-
-
-
 typedef enum{
 	 esp32_error = 0,
 	 esp32_ok,
 	 esp32_timeout,
 	 esp32_idle,
-}esp32_exit_code_t;
-
-typedef struct __WiFi_Client__{
-	const char* wifi_ssid;
-	const char* wifi_password;
-	const char* mqtt_broker_endpoint;
-	const char* mqtt_username;
-	const char* mqtt_password;
-	const char* mqtt_port;
-}WiFi_Client_t;
+}mqtt_client_exit_code_t;
 
 typedef enum{
 	undefined = 0,
@@ -46,26 +33,32 @@ typedef enum{
 	publish_mqtt_msg,			// 8
 	publish_raw_mqtt_msg,		// 9
 	wait_for_response,			// 10
-}MQTT_client_t;
+}mqtt_client_state_t;
 
 typedef struct {
 	/* public attributes */
-	uint32_t timeout;
-	fifo_t at_fifo;
+	const char* wifi_ssid;
+	const char* wifi_password;
+	const char* mqtt_broker_endpoint;
+	const char* mqtt_username;
+	const char* mqtt_password;
+	const char* mqtt_port;
 
 	/* private attributes */
+	fifo_t at_fifo;
 	char at_response_to_be[128];
 	char at_pub_payload[128];
 	uint16_t at_pub_payload_size;
+	uint32_t timeout;
 	uint32_t timeout_start;
-	MQTT_client_t next_state;	// next state aiming to after at_response success (nothing to do with state machine new_state)
-}client_fsm_t;
+	mqtt_client_state_t next_state;	// next state aiming to after at_response success (nothing to do with state machine new_state)
+}mqtt_client_t;
 
 
-void esp32_mqtt_fsm(client_fsm_t *client);
+void mqtt_client_fsm(mqtt_client_t *client);
 
-MQTT_client_t get_fsm_state(client_fsm_t *client);
-void set_fsm_state(client_fsm_t *client, MQTT_client_t new_state);
+mqtt_client_state_t get_mqtt_client_state(mqtt_client_t *client);
+void set_mqtt_client_state(mqtt_client_t *client, mqtt_client_state_t new_state);
 
 
 #endif /* DRIVERS_COMMUNICATION_ESP32AT_ESP32AT_H_ */

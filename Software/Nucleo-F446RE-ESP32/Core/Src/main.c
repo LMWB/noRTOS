@@ -44,12 +44,10 @@
 #include "Drivers/Communication/ESP32AT/fifo.h"
 #include "math.h"
 
+// Declare a global instance of mqtt_client
+mqtt_client_t esp32_mqtt_client;
 
-
-client_fsm_t esp32_mqtt_client;
-WiFi_Client_t esp32Client;     // todo not in use yet, merge with 'client_fsm_t esp32_mqtt_client'
-fifo_t esp32_at_cammand;
-
+// just a structure for handle some dummy data in the application code
 typedef struct{
 	float sin;
 	float cos;
@@ -57,13 +55,14 @@ typedef struct{
 	uint32_t time;
 	uint32_t date;
 }application_output;
-
 application_output app = {0};
 
+// noRTOS callback
 void internet_fsm(void){
-	esp32_mqtt_fsm(&esp32_mqtt_client);
+	mqtt_client_fsm(&esp32_mqtt_client);
 }
 
+// noRTOS callback
 void led_snake(void){
 	static uint8_t step = 0;
 
@@ -99,12 +98,13 @@ void led_snake(void){
 	if(step > 7) step = 0;
 }
 
+// noRTOS callback
 void heart_beat(void){
 	NUCLEO_LED_toggle();
 }
 
+// noRTOS callback
 void pub_telemetry(void){
-
 	char payload[128];
 	uint16_t size = 0;
 	size = sprintf(payload, "{\"sin\":%.2f,\"cos\":%.2f,\"tan\":%.2f}", app.sin, app.cos, app.tan);
@@ -112,13 +112,13 @@ void pub_telemetry(void){
 	memcpy(esp32_mqtt_client.at_pub_payload, payload, size);
 	esp32_mqtt_client.at_pub_payload_size = size;
 
-	if(get_fsm_state(&esp32_mqtt_client) == online){
-		set_fsm_state(&esp32_mqtt_client, publish_raw_mqtt_msg);
+	if(get_mqtt_client_state(&esp32_mqtt_client) == online){
+		set_mqtt_client_state(&esp32_mqtt_client, publish_raw_mqtt_msg);
 	}
-
 }
 
-/* just a heave task to keep the cpu busy and test "real time" */
+// noRTOS callback
+// just a heave task to keep the cpu busy and test "real time"
 void control_algorithm(void){
 	uint32_t now_sec = GET_TICK() / 1000.0;
 	float amp = 30.0;
@@ -176,7 +176,6 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
 // very short buffer since we reading byte wise
 uint8_t uart_internet_interrupt_buffer[8];
 
@@ -202,18 +201,15 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 
 void noRTOS_setup(void) {
 
-	esp32Client.wifi_ssid 				= "ssid";
-	esp32Client.wifi_password 			= "password";
-	esp32Client.mqtt_broker_endpoint 	= "broker.emqx.io";  // EMQX broker endpoint
-	esp32Client.mqtt_username 			= "emqx";  			// MQTT username for authentication
-	esp32Client.mqtt_password 			= "public";  		// MQTT password for authentication
-	esp32Client.mqtt_port 				= "1883";  			// MQTT port (TCP)
-
-	fifo_init(&esp32_at_cammand);
-	fifo_clear(&esp32_at_cammand);
+	// start mqtt client by giving credentials
+	esp32_mqtt_client.wifi_ssid 			= "ssid";
+	esp32_mqtt_client.wifi_password 		= "password";
+	esp32_mqtt_client.mqtt_broker_endpoint 	= "broker.emqx.io"; // EMQX broker endpoint
+	esp32_mqtt_client.mqtt_username 		= "emqx";  			// MQTT username for authentication
+	esp32_mqtt_client.mqtt_password 		= "public";  		// MQTT password for authentication
+	esp32_mqtt_client.mqtt_port 			= "1883";  			// MQTT port (TCP)
 
 	// enable uart RX byte-wise interrupt for ESP32 AT-Command Communication
-	//UART_INTERNET_READ_BYTE_IRQ( &uart_rx_buffer_internet[head] );
 	UART_INTERNET_READ_BYTE_IRQ( uart_internet_interrupt_buffer );
 
 	// enable uart with DMA interupt for COM port (terminal)
@@ -222,8 +218,6 @@ void noRTOS_setup(void) {
 }
 
 /* -------------------------------------------------------------------------------------------------------- */
-
-
 /* USER CODE END 0 */
 
 /**

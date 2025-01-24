@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Temporaer */
+/* Temporaer todo remove this */
 uint8_t uart_rx_buffer_internet[uart_rx_buffer_size] = {0};
 uint16_t head = 0;
 uint16_t tail = 0;
@@ -36,8 +36,8 @@ String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?\r\n";
 String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?\r\n";
 
 //String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"VodafoneMobileWiFi-6B18C9\",\"wGkH536785\"\r\n";
-//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
-String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"iPhone11\",\"abc123456\"\r\n";
+String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
+//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"iPhone11\",\"abc123456\"\r\n";
 
 String ES32_QUERY_IP 				= "AT+CIFSR\r\n";
 
@@ -96,7 +96,7 @@ void esp32_subscribe_to_topic(uint8_t topic_in_list){
 	UART_INTERNET_SEND( (uint8_t*)sub_buffer, size);
 }
 
-esp32_exit_code_t esp32_check_for_sub_receive(client_fsm_t *client) {
+mqtt_client_exit_code_t esp32_check_for_sub_receive(mqtt_client_t *client) {
 	// check if needle was found
 	char *ret = strstr((char*) client->at_fifo.buffer, ESP32_SUB_REC_MQTT);
 
@@ -114,7 +114,7 @@ void esp32_publish_to_topic(){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_PUB_MQTT, strlen(ESP32_PUB_MQTT));
 }
 
-void esp32_publish_raw_to_topic(client_fsm_t* client){
+void esp32_publish_raw_to_topic(mqtt_client_t* client){
 
 	char pub_raw_string[128];
 	uint16_t size = sprintf(pub_raw_string,
@@ -125,12 +125,12 @@ void esp32_publish_raw_to_topic(client_fsm_t* client){
 	UART_INTERNET_SEND( (uint8_t*)client->at_pub_payload, client->at_pub_payload_size);
 }
 
-void esp32_set_needle_for_response(client_fsm_t* client, String at_response, uint32_t timeout){
+void esp32_set_needle_for_response(mqtt_client_t* client, String at_response, uint32_t timeout){
 	memcpy(client->at_response_to_be, at_response, strlen(at_response));
 	client->timeout = timeout;
 }
 
-esp32_exit_code_t esp32_wait_for_response(client_fsm_t* client){
+mqtt_client_exit_code_t esp32_wait_for_response(mqtt_client_t* client){
 	uint32_t tic = GET_TICK();
 
 	// time out must be reworked
@@ -173,20 +173,20 @@ esp32_exit_code_t esp32_wait_for_response(client_fsm_t* client){
 }
 
 
-static MQTT_client_t state = boot_up;
+static mqtt_client_state_t state = boot_up;
 
-MQTT_client_t get_fsm_state(client_fsm_t *client){
+mqtt_client_state_t get_mqtt_client_state(mqtt_client_t *client){
 	return state;
 }
 
-void set_fsm_state(client_fsm_t *client, MQTT_client_t new_state){
+void set_mqtt_client_state(mqtt_client_t *client, mqtt_client_state_t new_state){
 	state = new_state;
 }
 
 
 
-void esp32_mqtt_fsm(client_fsm_t *client) {
-	MQTT_client_t new_state = standby;
+void mqtt_client_fsm(mqtt_client_t *client) {
+	mqtt_client_state_t new_state = standby;
 	switch (state) {
 	case undefined:
 		printf("Undefined \n");
@@ -247,7 +247,7 @@ void esp32_mqtt_fsm(client_fsm_t *client) {
 
 	case online:
 		printf("Online \n");
-		esp32_exit_code_t did_recieve_something = esp32_check_for_sub_receive(client);
+		mqtt_client_exit_code_t did_recieve_something = esp32_check_for_sub_receive(client);
 		if(did_recieve_something == esp32_ok){
 			// todo
 			// process mqtt received message
@@ -281,7 +281,7 @@ void esp32_mqtt_fsm(client_fsm_t *client) {
 		break;
 
 	case wait_for_response:
-		esp32_exit_code_t code = esp32_wait_for_response(client);
+		mqtt_client_exit_code_t code = esp32_wait_for_response(client);
 		if( code == esp32_ok){
 			new_state = client->next_state;
 		}else if ( code == esp32_timeout) {
