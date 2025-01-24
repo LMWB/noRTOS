@@ -125,18 +125,23 @@ void esp32_publish_raw_to_topic(mqtt_client_t* client){
 void esp32_set_needle_for_response(mqtt_client_t* client, String at_response, uint32_t timeout){
 	memcpy(client->at_response_to_be, at_response, strlen(at_response));
 	client->timeout = timeout;
+	client->timeout_start = GET_TICK();
 }
 
 mqtt_client_exit_code_t esp32_wait_for_response(mqtt_client_t* client){
 	uint32_t tic = GET_TICK();
 
 	// time out must be reworked
-//	if( (tic - client->timeout_start) >= client->timeout){
-//		printf("\t[debug] - timeout\n");
-//		// echo to terminal what has been received so far
-//		UART_TERMINAL_SEND(client->at_fifo.buffer, client->at_fifo.head);
-//		return esp32_timeout;
-//	}
+	if( (tic - client->timeout_start) >= client->timeout){
+		printf("\t[debug] - timeout\n");
+		// echo to terminal what has been received so far
+		UART_TERMINAL_SEND(client->at_fifo.buffer, client->at_fifo.head);
+		// clear needle
+		memset(client->at_response_to_be, '\0', 128);
+		// clear at-command rx-buffer
+		fifo_clear(&client->at_fifo);
+		return esp32_timeout;
+	}
 
 	// check if needle was found
 	char *ret = strstr((char*)client->at_fifo.buffer, client->at_response_to_be);
@@ -200,7 +205,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 		esp32_reset();
 		client->next_state = connect_to_wifi;
 		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "ready\r\n", 0xFFFF);
+		esp32_set_needle_for_response(client, "ready\r\n", 0x3000);
 		break;
 
 	case connect_to_wifi:
@@ -208,7 +213,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 		esp32_connect_to_wifi(client);
 		client->next_state = config_connection_to_broker;
 		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "WIFI GOT IP\r\n\r\nOK\r\n", 0xFFFF);
+		esp32_set_needle_for_response(client, "WIFI GOT IP\r\n\r\nOK\r\n", 0x3000);
 		break;
 
 	case config_connection_to_broker:
@@ -216,7 +221,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 		esp32_config_mqtt_connection();
 		client->next_state = connect_to_mqtt_broker;
 		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
+		esp32_set_needle_for_response(client, "OK\r\n", 0x3000);
 		break;
 
 	case connect_to_mqtt_broker:
@@ -224,7 +229,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 		esp32_connect_to_mqtt_broker();
 		client->next_state = subscribe_to_mqtt_msg;
 		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
+		esp32_set_needle_for_response(client, "OK\r\n", 0x3000);
 		break;
 
 	case subscribe_to_mqtt_msg:
@@ -239,7 +244,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 			subscribes_done = 0;
 		}
 		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
+		esp32_set_needle_for_response(client, "OK\r\n", 0x3000);
 		break;
 
 	case online:
@@ -266,7 +271,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 		esp32_publish_to_topic();
 		client->next_state = online;
 		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "OK\r\n", 0xFFFF);
+		esp32_set_needle_for_response(client, "OK\r\n", 0x3000);
 		break;
 
 	case publish_raw_mqtt_msg:
@@ -274,7 +279,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 		esp32_publish_raw_to_topic(client);
 		client->next_state = online;
 		new_state = wait_for_response;
-		esp32_set_needle_for_response(client, "+MQTTPUB:OK\r\n", 0xFFFF);
+		esp32_set_needle_for_response(client, "+MQTTPUB:OK\r\n", 0x3000);
 		break;
 
 	case wait_for_response:
