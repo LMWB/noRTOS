@@ -69,7 +69,6 @@ void esp32_reset(){
 	HAL_GPIO_WritePin(ESP32_RST_GPIO_Port, ESP32_RST_Pin, 0);
 	DELAY(200);
 	HAL_GPIO_WritePin(ESP32_RST_GPIO_Port, ESP32_RST_Pin, 1);
-	DELAY(200);
 	// alternative send RST AT-Command
 	//UART_INTERNET_SEND( (uint8_t*)ESP32_RESET, strlen(ESP32_RESET));
 }
@@ -83,8 +82,22 @@ void esp32_connect_to_wifi(mqtt_client_t *client){
 	UART_INTERNET_SEND( (uint8_t*)at_working_buffer, size);
 }
 
-void esp32_connect_to_sntp(){
+void esp32_connect_to_sntp(void){
 	UART_INTERNET_SEND( (uint8_t*)ESP32_SET_SNTP_TIME, strlen(ESP32_SET_SNTP_TIME));
+}
+
+void esp32_query_epochtime(void){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_QUERY_TIMESTAMP, strlen(ESP32_QUERY_TIMESTAMP));
+}
+
+void esp32_query_sntp_time(void){
+	UART_INTERNET_SEND( (uint8_t*)ESP32_QUERY_SNTP_TIME, strlen(ESP32_QUERY_SNTP_TIME));
+}
+
+void esp32_synch_host_rtc(void){
+	char* unix_time = strstr(at_working_buffer, "+CIPSNTPTIME:");
+	// TODO
+	printf("Date / Time is: %s", unix_time+13);
 }
 
 void esp32_config_mqtt_connection(){
@@ -133,6 +146,17 @@ void esp32_set_needle_for_response(mqtt_client_t* client, String at_response, ui
 	client->timeout_start = GET_TICK();
 }
 
+void esp32_clear_needle_for_response(mqtt_client_t* client){
+	memset(client->at_response_to_be, '\0', 128);
+}
+
+void esp32_preserve_response(mqtt_client_t* client){
+	uint16_t size = client->at_fifo.head;
+	memcpy(at_working_buffer, &client->at_fifo.buffer, size);
+	// don't forget null terminator at end of string
+	at_working_buffer[size] = '\0';
+}
+
 mqtt_client_exit_code_t esp32_wait_for_response(mqtt_client_t* client){
 	uint32_t tic = GET_TICK();
 
@@ -141,8 +165,9 @@ mqtt_client_exit_code_t esp32_wait_for_response(mqtt_client_t* client){
 		printf("\t[debug] - timeout\n");
 		// echo to terminal what has been received so far
 		UART_TERMINAL_SEND(client->at_fifo.buffer, client->at_fifo.head);
-		// clear needle
-		memset(client->at_response_to_be, '\0', 128);
+
+		esp32_clear_needle_for_response(client);
+
 		// clear at-command rx-buffer
 		fifo_clear(&client->at_fifo);
 		return esp32_timeout;
@@ -156,8 +181,9 @@ mqtt_client_exit_code_t esp32_wait_for_response(mqtt_client_t* client){
 		// echo to terminal
 		UART_TERMINAL_SEND(client->at_fifo.buffer, client->at_fifo.head);
 
-		// clear needle
-		memset(client->at_response_to_be, '\0', 128);
+		esp32_clear_needle_for_response(client);
+		esp32_preserve_response(client);
+
 		// clear at-command rx-buffer
 		fifo_clear(&client->at_fifo);
 		return esp32_ok;
@@ -170,7 +196,9 @@ mqtt_client_exit_code_t esp32_wait_for_response(mqtt_client_t* client){
 		// echo to terminal
 		UART_TERMINAL_SEND(client->at_fifo.buffer, client->at_fifo.head);
 
-		memset(client->at_response_to_be, '\0', 128);
+		esp32_clear_needle_for_response(client);
+
+		// clear at-command rx-buffer
 		fifo_clear(&client->at_fifo);
 		return esp32_error;
 	}
@@ -189,8 +217,6 @@ mqtt_client_state_t get_mqtt_client_state(mqtt_client_t *client){
 void set_mqtt_client_state(mqtt_client_t *client, mqtt_client_state_t new_state){
 	state = new_state;
 }
-
-
 
 void mqtt_client_fsm(mqtt_client_t *client) {
 	mqtt_client_state_t new_state = standby;
@@ -216,9 +242,31 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 	case connect_to_wifi:
 		printf("connecting to Wifi\n");
 		esp32_connect_to_wifi(client);
-		client->next_state = config_connection_to_broker;
+		client->next_state = connect_sntp;
 		new_state = wait_for_response;
 		esp32_set_needle_for_response(client, "WIFI GOT IP\r\n\r\nOK\r\n", 0x3000);
+		break;
+
+	case connect_sntp:
+		printf("connecting to SNTP Server\n");
+		esp32_connect_to_sntp();
+		client->next_state = request_sntp_time;
+		new_state = wait_for_response;
+		esp32_set_needle_for_response(client, "OK\r\n+TIME_UPDATED\r\n", 3000);
+		break;
+
+	case request_sntp_time:
+		printf("request SNTP time\n");
+		esp32_query_sntp_time();
+		client->next_state = synch_rtc;
+		new_state = wait_for_response;
+		esp32_set_needle_for_response(client, "OK\r\n", 3000);
+		break;
+
+	case synch_rtc:
+		esp32_synch_host_rtc();
+		client->next_state = config_connection_to_broker;
+		new_state = config_connection_to_broker;
 		break;
 
 	case config_connection_to_broker:

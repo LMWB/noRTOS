@@ -19,13 +19,11 @@
   *
   * Hardware:
   * smart-hub-100 PCB with Nucleo-F446RE and soldered ESP32
+  * - switch S2 is used as GPIO_out and soldered to ESP32 reset-pin
   *
-  *
-  * Todo
-  * - add several sub topics
-  * - send 'real' telemetry, currently static string
-  *
-  *
+  * TODO
+  *- connect to SNTP
+  *- synch RTC
   *
   ******************************************************************************
   */
@@ -33,6 +31,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "rtc.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -121,12 +120,14 @@ void pub_telemetry(void){
 // just a heave task to keep the cpu busy and test "real time"
 void control_algorithm(void){
 	uint32_t now_sec = GET_TICK() / 1000.0;
-	float amp = 30.0;
+	float amp = 10.0;
+	float off = 5;
 	float f = 1/3600.0; // f = 1/T, T = 1h = 3600sec = 3.600.000 ms
 	float max = 70.0;
 	float min = -10.0;
+
 	float sin = sinf( 2*M_PI*f * (float)(now_sec)) * amp;
-	float cos = cosf( 2*M_PI*f * (float)(now_sec)) * amp;
+	float cos = cosf( 2*M_PI*f * (float)(now_sec)) * amp * (-1.0) + off;
 	float tan = tanf( 2*M_PI*f * (float)(now_sec)) * amp;
 
 	/* catch min/max boundaries */
@@ -202,10 +203,10 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 void noRTOS_setup(void) {
 
 	// start mqtt client by giving credentials
-//	esp32_mqtt_client.wifi_ssid 			= "hot-spot";
-//	esp32_mqtt_client.wifi_password 		= "JKp8636785";
-	esp32_mqtt_client.wifi_ssid 			= "iPhone11";
-	esp32_mqtt_client.wifi_password 		= "abc123456";
+	esp32_mqtt_client.wifi_ssid 			= "hot-spot";
+	esp32_mqtt_client.wifi_password 		= "JKp8636785";
+//	esp32_mqtt_client.wifi_ssid 			= "iPhone11";
+//	esp32_mqtt_client.wifi_password 		= "abc123456";
 
 	esp32_mqtt_client.mqtt_broker_endpoint 	= "broker.emqx.io"; // EMQX broker endpoint
 	esp32_mqtt_client.mqtt_username 		= "emqx";  			// MQTT username for authentication
@@ -255,6 +256,7 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
   noRTOS_task_t led_snake_t = {.delay = eNORTOS_PERIODE_200ms, .task_callback = led_snake};
@@ -306,7 +308,8 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;

@@ -26,13 +26,16 @@ typedef enum{
 	standby,					// 1
 	boot_up,					// 2
 	connect_to_wifi,			// 3
-	config_connection_to_broker,// 4
-	connect_to_mqtt_broker,		// 5
-	subscribe_to_mqtt_msg,		// 6
-	online,						// 7
-	publish_mqtt_msg,			// 8
-	publish_raw_mqtt_msg,		// 9
-	wait_for_response,			// 10
+	connect_sntp,				// 4
+	config_connection_to_broker,// 5
+	connect_to_mqtt_broker,		// 6
+	subscribe_to_mqtt_msg,		// 7
+	online,						// 8
+	publish_mqtt_msg,			// 9
+	publish_raw_mqtt_msg,		// 10
+	request_sntp_time,			// 11
+	synch_rtc,					// 12
+	wait_for_response,			// 13
 }mqtt_client_state_t;
 
 typedef struct {
