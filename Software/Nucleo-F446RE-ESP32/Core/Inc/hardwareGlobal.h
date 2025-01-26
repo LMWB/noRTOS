@@ -12,20 +12,21 @@
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"
 #include "usart.h"
+#include "rtc.h"
 
-/* *** Platform delay (polling) ***************************************************************** */
+/* *** Platform delay (polling) ******************************************************** */
 #define MAX_DELAY        HAL_MAX_DELAY
 #define DELAY(ms)        HAL_Delay(ms)
 #define GET_TICK()       HAL_GetTick()
 
-/* *** Platform return codes ***************************************************************** */
+/* *** Platform return codes ********************************************************** */
 #define DEVICE_STATUS_DEFINITION        HAL_StatusTypeDef
 #define DEVICE_OK                       HAL_OK
 #define DEVICE_ERROR                    HAL_ERROR
 #define DEVICE_BUSY                     HAL_BUSY
 #define DEVICE_TIMEOUT                  HAL_TIMEOUT
 
-/* *** GPIO ***************************************************************** */
+/* *** GPIO *************************************************************************** */
 #define SW_NUCLEO   				B1_Pin
 #define NUCLEO_BUTTON_READ()		HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)
 
@@ -54,7 +55,7 @@
 #define LED4_TOGGLE()			HAL_GPIO_TogglePin( USER_LED4_GPIO_Port, USER_LED4_Pin)
 
 
-/* *** UART ***************************************************************** */
+/* *** UART *************************************************************************** */
 #define UART_TERMINAL_HANDLER 	            		huart2
 #define UART_TERMINAL_INSTANCE 	            		USART2
 #define UART_TERMINAL_SEND(string, size)    		HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
@@ -71,14 +72,20 @@
 #define UART_INTERNET_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(	&UART_INTERNET_HANDLER, buffer, size)
 #define UART_INTERNET_ABORT_IRQ()					HAL_UART_AbortReceive_IT(		&UART_INTERNET_HANDLER)
 
-/* *** I2C ********************************************************************/
+/* *** I2C ********************************************************************************/
 
-/* *** SPI ********************************************************************/
+/* *** SPI ********************************************************************************/
 
-/* *** Hardware Timer ********************************************************************/
+/* *** Hardware Timer *********************************************************************/
 
-/* *** Watch Dog ********************************************************************/
+/* *** Watch Dog **************************************************************************/
 
 /* *** Real Time Clock ********************************************************************/
+#define RTC_HANDLER             hrtc
+#define RTC_INSTANCE            RTC
+#define SET_DEVICE_TIME(sTime)  HAL_RTC_SetTime( &RTC_HANDLER, sTime, RTC_FORMAT_BIN)
+#define SET_DEVICE_DATE(sDate)  HAL_RTC_SetDate( &RTC_HANDLER, sDate, RTC_FORMAT_BIN)
+#define GET_DEVICE_TIME(sTime)  HAL_RTC_GetTime( &RTC_HANDLER, sTime, RTC_FORMAT_BIN)
+#define GET_DEVICE_DATE(sDate)  HAL_RTC_GetDate( &RTC_HANDLER, sDate, RTC_FORMAT_BIN)
 
 #endif /* HARDWARE_GLOBAL_H */

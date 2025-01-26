@@ -1,5 +1,6 @@
 #include "esp32at.h"
 #include "hardwareGlobal.h"
+#include "utils.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -63,7 +64,7 @@ String sub_topics[TOTAL_TOPICS_SUBSCRIBE_TO] = {
 		"jiKEBRupldriwltofSUB1/button", "jiKEBRupldriwltofSUB2/slider",
 		"jiKEBRupldriwltofSUB3/raw", "jiKEBRupldriwltofSUB4/bin", "jiKEBRupldriwltofSUB5/string"};
 
-static char at_working_buffer[128];
+static char at_working_buffer[1024];
 
 void esp32_reset(){
 	HAL_GPIO_WritePin(ESP32_RST_GPIO_Port, ESP32_RST_Pin, 0);
@@ -98,6 +99,10 @@ void esp32_synch_host_rtc(void){
 	char* unix_time = strstr(at_working_buffer, "+CIPSNTPTIME:");
 	// TODO
 	printf("Date / Time is: %s", unix_time+13);
+	struct tm time_date;
+	time_t epoch = cvt_asctime( (unix_time+13), &time_date);
+	epoch = epoch;
+	change_controller_time(&time_date);
 }
 
 void esp32_config_mqtt_connection(){

@@ -21,10 +21,6 @@
   * smart-hub-100 PCB with Nucleo-F446RE and soldered ESP32
   * - switch S2 is used as GPIO_out and soldered to ESP32 reset-pin
   *
-  * TODO
-  *- connect to SNTP
-  *- synch RTC
-  *
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -106,7 +102,9 @@ void heart_beat(void){
 void pub_telemetry(void){
 	char payload[128];
 	uint16_t size = 0;
-	size = sprintf(payload, "{\"sin\":%.2f,\"cos\":%.2f,\"tan\":%.2f}", app.sin, app.cos, app.tan);
+	uint32_t timedate = get_epoch_time();
+	size = sprintf(payload, "{\"timestamp\":%ld,\"sin\":%.2f,\"cos\":%.2f,\"tan\":%.2f}",
+			timedate, app.sin, app.cos, app.tan);
 	printf("Telemetry [%d bytes] Payload: %s\n", size, payload);
 	memcpy(esp32_mqtt_client.at_pub_payload, payload, size);
 	esp32_mqtt_client.at_pub_payload_size = size;
@@ -119,16 +117,18 @@ void pub_telemetry(void){
 // noRTOS callback
 // just a heave task to keep the cpu busy and test "real time"
 void control_algorithm(void){
-	uint32_t now_sec = GET_TICK() / 1000.0;
+	struct tm* now = get_gmtime_stm32();
+	float now_minutes = now->tm_hour*60.0 + (float)now->tm_min;
+
 	float amp = 10.0;
 	float off = 5;
-	float f = 1/3600.0; // f = 1/T, T = 1h = 3600sec = 3.600.000 ms
+	float f = 1/(24.0*60.0); // T = 24h
 	float max = 70.0;
 	float min = -10.0;
 
-	float sin = sinf( 2*M_PI*f * (float)(now_sec)) * amp;
-	float cos = cosf( 2*M_PI*f * (float)(now_sec)) * amp * (-1.0) + off;
-	float tan = tanf( 2*M_PI*f * (float)(now_sec)) * amp;
+	float sin = sinf( 2*M_PI*f * (float)(now_minutes)) * amp;
+	float cos = cosf( 2*M_PI*f * (float)(now_minutes)) * amp * (-1.0) + off;
+	float tan = tanf( 2*M_PI*f * (float)(now_minutes)) * amp;
 
 	/* catch min/max boundaries */
 	if(sin > max) sin = max;
@@ -143,6 +143,19 @@ void control_algorithm(void){
 	app.tan = tan;
 
 	printf(" -- Hello World -- \n");
+}
+
+// noRTOS callback
+void print_curretn_time(void) {
+	// print epoch time fetched from stm32 internal real time clock (RTC)
+	uint32_t epochtime = get_epoch_time();
+
+	// print timestamp from stm32 internal RTC
+	struct tm *timestamp = get_gmtime_stm32();
+
+	// print them all nice to log in terminal
+	printf("Time-Date-Logging:epoch,%ld,ts_hh,%d,ts_mm,%d,ts_ss,%d\r\n",
+	epochtime, timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
 }
 
 /* USER CODE END Includes */
@@ -273,6 +286,9 @@ int main(void)
 
   noRTOS_task_t pub_telemetry_t = {.delay = eNORTOS_PERIODE_30s, .task_callback = pub_telemetry};
   noRTOS_add_task_to_scheduler(&pub_telemetry_t);
+
+  noRTOS_task_t time_date_t = {.delay = eNORTOS_PERIODE_1min, .task_callback = print_curretn_time};
+  noRTOS_add_task_to_scheduler(&time_date_t);
 
   noRTOS_run_scheduler();
 
