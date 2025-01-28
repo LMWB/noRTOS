@@ -30,6 +30,13 @@ void scan_i2c_sensors(void);
 struct tm *get_gmtime_stm32();
 
 /**
+ * @brief 	set the Microcontrollers Real Time Clock
+ * 			implementation is vendor specific
+ * 			here we use STM32
+ */
+uint8_t set_gmtime_stm32(struct tm *time);
+
+/**
  * @brief  Convert the STM32 HAL RTC timestamp structure into unix epoch time in seconds from Jan 1st 1900 00:00:00
  * @param  non
  * @retval SECONDS since epoch time 1970 Jan 1st 00:00:00
@@ -45,12 +52,5 @@ time_t get_epoch_time(void);
  * @retval time_t Unix Epoch Time
  */
 time_t cvt_asctime(const char *linux_asctime_str, struct tm *time);
-
-/**
- * @brief 	set the Microcontrollers Real Time Clock
- * 			implementation is vendor specific
- * 			here we use STM32
- */
-uint8_t change_controller_time(struct tm *time);
 
 #endif

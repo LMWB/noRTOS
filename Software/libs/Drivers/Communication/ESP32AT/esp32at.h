@@ -60,8 +60,13 @@ typedef struct {
 
 void mqtt_client_fsm(mqtt_client_t *client);
 
+/* deprecated do not use */
 mqtt_client_state_t get_mqtt_client_state(mqtt_client_t *client);
 void set_mqtt_client_state(mqtt_client_t *client, mqtt_client_state_t new_state);
+
+/* use this to control state machine from outside */
+void fsm_job_queue_put(mqtt_client_state_t job_to_do);
+mqtt_client_state_t fsm_job_queue_pop(void);
 
 
 #endif /* DRIVERS_COMMUNICATION_ESP32AT_ESP32AT_H_ */

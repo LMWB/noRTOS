@@ -103,15 +103,20 @@ void pub_telemetry(void){
 	char payload[128];
 	uint16_t size = 0;
 	uint32_t timedate = get_epoch_time();
-	size = sprintf(payload, "{\"timestamp\":%ld,\"sin\":%.2f,\"cos\":%.2f,\"tan\":%.2f}",
-			timedate, app.sin, app.cos, app.tan);
+	size = sprintf(payload, "{\"timestamp\":%ld,\"sin\":%.2f,\"cos\":%.2f,\"tan\":%.2f}", timedate, app.sin, app.cos, app.tan);
 	printf("Telemetry [%d bytes] Payload: %s\n", size, payload);
+
+	// todo build a nice to read wrapper function that copys payload to client pub buffer
 	memcpy(esp32_mqtt_client.at_pub_payload, payload, size);
 	esp32_mqtt_client.at_pub_payload_size = size;
 
-	if(get_mqtt_client_state(&esp32_mqtt_client) == online){
-		set_mqtt_client_state(&esp32_mqtt_client, publish_raw_mqtt_msg);
-	}
+	fsm_job_queue_put(publish_raw_mqtt_msg);
+
+//	if(get_mqtt_client_state(&esp32_mqtt_client) == online){
+//		set_mqtt_client_state(&esp32_mqtt_client, publish_raw_mqtt_msg);
+//	}else{
+//		printf("Publish telemetry failed");
+//	}
 }
 
 // noRTOS callback
@@ -156,6 +161,18 @@ void print_curretn_time(void) {
 	// print them all nice to log in terminal
 	printf("Time-Date-Logging:epoch,%ld,ts_hh,%d,ts_mm,%d,ts_ss,%d\r\n",
 	epochtime, timestamp->tm_hour, timestamp->tm_min, timestamp->tm_sec);
+}
+
+void resynch_time_date(void){
+	printf("Resynch RTC with SNTP time\n");
+	fsm_job_queue_put(request_sntp_time);
+
+
+//	if(get_mqtt_client_state(&esp32_mqtt_client) == online){
+//		set_mqtt_client_state(&esp32_mqtt_client, request_sntp_time);
+//	}else{
+//		printf("Resynch RTC failed\n");
+//	}
 }
 
 /* USER CODE END Includes */
@@ -216,10 +233,10 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 void noRTOS_setup(void) {
 
 	// start mqtt client by giving credentials
-	esp32_mqtt_client.wifi_ssid 			= "hot-spot";
-	esp32_mqtt_client.wifi_password 		= "JKp8636785";
-//	esp32_mqtt_client.wifi_ssid 			= "iPhone11";
-//	esp32_mqtt_client.wifi_password 		= "abc123456";
+//	esp32_mqtt_client.wifi_ssid 			= "hot-spot";
+//	esp32_mqtt_client.wifi_password 		= "JKp8636785";
+	esp32_mqtt_client.wifi_ssid 			= "iPhone11";
+	esp32_mqtt_client.wifi_password 		= "abc123456";
 
 	esp32_mqtt_client.mqtt_broker_endpoint 	= "broker.emqx.io"; // EMQX broker endpoint
 	esp32_mqtt_client.mqtt_username 		= "emqx";  			// MQTT username for authentication
@@ -289,6 +306,9 @@ int main(void)
 
   noRTOS_task_t time_date_t = {.delay = eNORTOS_PERIODE_1min, .task_callback = print_curretn_time};
   noRTOS_add_task_to_scheduler(&time_date_t);
+
+  noRTOS_task_t resynch_time_date_t = {.delay = eNORTOS_PERIODE_1min, .task_callback = resynch_time_date};
+  noRTOS_add_task_to_scheduler(&resynch_time_date_t);
 
   noRTOS_run_scheduler();
 

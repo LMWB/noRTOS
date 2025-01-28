@@ -147,7 +147,7 @@ time_t cvt_asctime(const char *linux_asctime_str, struct tm *time) {
 	return mktime(&t);
 }
 
-uint8_t change_controller_time(struct tm *time) {
+uint8_t set_gmtime_stm32(struct tm *time) {
 	RTC_TimeTypeDef s_time = {0};
 	RTC_DateTypeDef s_date = {0};
 	s_time.Hours = time->tm_hour;

@@ -37,7 +37,6 @@ String ESP32_QUERY_WIFI_STATE		= "AT+CWSTATE?\r\n";
 String ESP32_QUERY_WIFI_CONNECTION	= "AT+CWJAP?\r\n";
 
 String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"hot-spot\",\"JKp8636785\"\r\n";
-//String ESP32_SET_AP_CONNECTION 		= "AT+CWJAP=\"iPhone11\",\"abc123456\"\r\n";
 
 String ES32_QUERY_IP 				= "AT+CIFSR\r\n";
 String ESP32_PING 					= "AT+PING=\"www.google.de\"\r\n";
@@ -97,12 +96,11 @@ void esp32_query_sntp_time(void){
 
 void esp32_synch_host_rtc(void){
 	char* unix_time = strstr(at_working_buffer, "+CIPSNTPTIME:");
-	// TODO
 	printf("Date / Time is: %s", unix_time+13);
 	struct tm time_date;
 	time_t epoch = cvt_asctime( (unix_time+13), &time_date);
 	epoch = epoch;
-	change_controller_time(&time_date);
+	set_gmtime_stm32(&time_date);
 }
 
 void esp32_config_mqtt_connection(){
@@ -212,6 +210,16 @@ mqtt_client_exit_code_t esp32_wait_for_response(mqtt_client_t* client){
 	return esp32_idle;
 }
 
+static fifo_t fsm_job_fifo = {.head = 0, .tail = 0};
+
+void fsm_job_queue_put(mqtt_client_state_t job_to_do){
+	fifo_put_byte(&fsm_job_fifo, (uint8_t) job_to_do);
+}
+
+mqtt_client_state_t fsm_job_queue_pop(void){
+	uint8_t byte = fifo_pop_byte(&fsm_job_fifo);
+	return (mqtt_client_state_t) byte;
+}
 
 static mqtt_client_state_t state = boot_up;
 
@@ -225,6 +233,8 @@ void set_mqtt_client_state(mqtt_client_t *client, mqtt_client_state_t new_state)
 
 void mqtt_client_fsm(mqtt_client_t *client) {
 	mqtt_client_state_t new_state = standby;
+	static bool fsm_is_online = false;
+
 	switch (state) {
 	case undefined:
 		printf("Undefined \n");
@@ -238,6 +248,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 
 	case boot_up:
 		printf("Reseting ESP32\n");
+		fsm_is_online = false;
 		esp32_reset();
 		client->next_state = connect_to_wifi;
 		new_state = wait_for_response;
@@ -263,15 +274,23 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 	case request_sntp_time:
 		printf("request SNTP time\n");
 		esp32_query_sntp_time();
-		client->next_state = synch_rtc;
-		new_state = wait_for_response;
 		esp32_set_needle_for_response(client, "OK\r\n", 3000);
+		new_state = wait_for_response;
+		client->next_state = synch_rtc;
 		break;
 
 	case synch_rtc:
 		esp32_synch_host_rtc();
-		client->next_state = config_connection_to_broker;
-		new_state = config_connection_to_broker;
+		if(fsm_is_online == false){
+			// in regular boot phase use this path
+			client->next_state	= config_connection_to_broker;
+			new_state 			= config_connection_to_broker;
+		}else{
+			// on runtime when need to resynch RTC with atom-clock the mqtt broker
+			// is already set up and the FSM can jump to online
+			client->next_state	= online;
+			new_state 			= online;
+		}
 		break;
 
 	case config_connection_to_broker:
@@ -307,8 +326,11 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 
 	case online:
 		printf("Online \n");
+		fsm_is_online = true;
 		mqtt_client_exit_code_t did_recieve_something = esp32_check_for_sub_receive(client);
-		if(did_recieve_something == esp32_ok){
+		mqtt_client_state_t job = fsm_job_queue_pop();
+
+		if (did_recieve_something == esp32_ok) {
 			// todo
 			// process mqtt received message
 
@@ -318,7 +340,12 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 			// Continue in state machine
 			client->next_state = online;
 			new_state = online;
-		}else{
+		} else if (job != 0) {
+			//set_mqtt_client_state(client, job);
+			client->next_state = job;
+			new_state = job;
+		} else {
+			// stay online
 			client->next_state = online;
 			new_state = online;
 		}
