@@ -11,7 +11,12 @@ mqtt_client_t esp32_mqtt_client = {0};
 // ---------- platform specific (STM32) interrupt management -------------------------------
 
 // local, very short, buffer since we reading byte wise
-uint8_t uart_internet_interrupt_buffer[8];
+uint8_t uart_internet_interrupt_buffer[8] = {0};
+
+// local, little larger buffer for uart-bridge
+#define __1KByte__ 1024
+#define uart_rx_buffer_size (__1KByte__)
+uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size] = {0};
 
 /* STM32 HAL Based UART Bridge with RX-byte (char) interrupt */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
@@ -178,7 +183,6 @@ void live_data(void){
 }
 
 // ----------------------- this is the super-loop() ----------------------------------------
-
 void app_main() {
 	noRTOS_task_t led_snake_t = { .delay = eNORTOS_PERIODE_200ms, .task_callback = led_snake };
 	noRTOS_add_task_to_scheduler(&led_snake_t);

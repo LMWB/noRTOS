@@ -4,14 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Temporaer todo remove this */
-uint8_t uart_rx_buffer_internet[uart_rx_buffer_size] = {0};
-uint16_t head = 0;
-uint16_t tail = 0;
-uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size] = {0};
-/* Temporaer */
-
-
 /* MQTT Connection Example with web based client
  * https://mqttx.app/web-client#/recent_connections/8dc002fe-dc48-4926-8760-bde4bbb4c859
  * https://www.emqx.com/en/blog/mqtt-client-tools

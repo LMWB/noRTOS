@@ -3,17 +3,6 @@
 #include <stdint.h>
 #include "fifo.h"
 
-/* Temporaer todo remove this */
-#define __1KByte__ 1024
-#define uart_rx_buffer_size (__1KByte__)
-
-extern uint8_t uart_rx_buffer_internet[uart_rx_buffer_size];
-extern uint16_t head;
-extern uint16_t tail;
-extern uint8_t uart_rx_buffer_terminal[uart_rx_buffer_size];
-/* Temporaer */
-
-
 typedef enum{
 	 esp32_error = 0,
 	 esp32_ok,
