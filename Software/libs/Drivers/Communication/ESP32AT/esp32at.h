@@ -20,11 +20,16 @@ typedef enum{
 	connect_to_mqtt_broker,		// 6
 	subscribe_to_mqtt_msg,		// 7
 	online,						// 8
+
 	publish_mqtt_msg,			// 9
 	publish_raw_mqtt_msg,		// 10
 	request_sntp_time,			// 11
 	synch_rtc,					// 12
-	wait_for_response,			// 13
+	send_live_data,				// 13
+	send_logs,					// 14
+	receive_update,				// 15 (maybe not needed since it is a mqtt-sub)
+
+	wait_for_response,			// 16
 }mqtt_client_state_t;
 
 typedef struct {
