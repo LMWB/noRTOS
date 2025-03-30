@@ -41,12 +41,23 @@ noRTOS_run_scheduler();
 while (1) {}
 
 ```
+# Pros and Cons of noRTOS compared to "proper RTOS"
+With proper RTOS I mean the very popular freeRTOS, Azure-RTOS. But there are many more like the CMSIS-RTOS, mBedded-RTOS, Zephyr-RTOS, RIOT to name a few.  
+My **personal** thoughts on when to use a RTOS vs when to use noRTOS  
+
+## Pros
+- no need to consider what RTOS should I use
+- no licenses no costs
+- easy to debug without expensive tools or software
+- no need to worry about crazy terms like: mutexes, semaphores, task priorities, preemption, etc
+- mainly HAL driven
+
+## Cons
+- no support (not yet ;) for file-system, network-module, usb-stack
+- mainly HAL driven
+
 # Examples
-hallo hallo  
 - [Basic Example](Projects/Basic-Nucleo/README.md)
 - [Multifunction Shield](Projects/Multi-Function-Shield/README.md)
 - [ESP32 as Wifi Coprocessor with AT-Command-Firmware](Projects/AT-Commands/README.md)
 - [Multi Sensor Reading and Processing](Projects/Multi-Sensors/README.md)
-
-There are two examples. One very simple which uses a NucleoF446RE Board. It will work with every other Nucleo-Board, since the app uses just the blue onboard button, the LED and the UART2 which is rooted to the onboard STlink USB debugger.   
-Second example uses the [multifunction shield](https://www.amazon.de/Hailege-Multifunktionale-Erweiterungskarte-Infrarot-Empf%C3%A4nger-Erweiterungsfunktion/dp/B07Y82V2SK/ref=asc_df_B07Y82V2SK?mcid=ca525e76b08b3d098cc3bf185179ebcf&th=1&psc=1&tag=googshopde-21&linkCode=df0&hvadid=696321262544&hvpos=&hvnetw=g&hvrand=6870903724215630989&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9042490&hvtargid=pla-1650224597464&psc=1&gad_source=1) to demonstrate "parallel" processing of multiple task.   
