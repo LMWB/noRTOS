@@ -1,12 +1,3 @@
-# Basic Example
-tbd
-
-# Multifunction Shield
-tbd
-
-# ESP32 as Wifi Coprocessor with AT-Command-Firmware
-tbd
-
 # Multi Sensor Reading and Processing 
 Got myself some CO2 sensors and like to compare them.  
 - [CCS811](https://www.az-delivery.de/products/co2-gassensor-ccs811?variant=43961284067595)  
