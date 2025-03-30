@@ -1,44 +1,11 @@
-# Basic Example
-tbd
-
-# Multifunction Shield
-tbd
-
 # ESP32 as Wifi Coprocessor with AT-Command-Firmware
-tbd
+The ESP32 is a very pupular microcontroller with integrated Wifi and Bluetooth Hardware.
+The ESP32 is also avaliable as ready to use and pre CE certificated Modules with very attractive budget.  
+This approach is so succesfully, that it has become a serious compettitor to the well know Arduino Plattform.  
 
-# Multi Sensor Reading and Processing 
-Got myself some CO2 sensors and like to compare them.  
-- [CCS811](https://www.az-delivery.de/products/co2-gassensor-ccs811?variant=43961284067595)  
-- [ENS160](https://www.ebay.de/itm/315089224848?itmmeta=01JH545T2H1F4BY6BSW9YKCXKX&hash=item495cc80490:g:pIkAAOSwLzNln8qE)  
-- [SCD4x](https://www.amazon.de/Jevina-Gassensormodul-Erkennt-Kohlendioxidtemperatur-Feuchtigkeit/dp/B0CPHX4DSG/ref=pd_day0_d_sccl_3_6/257-2786381-1588211?pd_rd_w=1naQq&content-id=amzn1.sym.0f8cb1f5-d0ae-4ed8-b7c8-e1284e2ce458&pf_rd_p=0f8cb1f5-d0ae-4ed8-b7c8-e1284e2ce458&pf_rd_r=AZTDAPJDVQBBQ1C8FNYP&pd_rd_wg=t6t50&pd_rd_r=5fd559e8-1ddb-4d8e-b365-814866b32866&pd_rd_i=B0CPHX4DSG&psc=1)  
+Many people use one ESP32 module and the Arduino IDE or PlattformIO IDE to create wireless projects.  
+But there is another way to bring your application online.  
+The so called ESP32-AT-Command Firmware is a standalone piece of firmware running on the ESP32.  
+With only two uart pins it is possible to bring any microcontroller to network.  
 
-Another one worth trying could be this  
-- [SGP40](https://www.amazon.de/Hailege-Dioxide-Formaldehyde-Monitoring-GY-SGP40/dp/B0CJY3SM8S/ref=pd_day0_d_sccl_3_1/257-2786381-1588211?pd_rd_w=1naQq&content-id=amzn1.sym.0f8cb1f5-d0ae-4ed8-b7c8-e1284e2ce458&pf_rd_p=0f8cb1f5-d0ae-4ed8-b7c8-e1284e2ce458&pf_rd_r=AZTDAPJDVQBBQ1C8FNYP&pd_rd_wg=t6t50&pd_rd_r=5fd559e8-1ddb-4d8e-b365-814866b32866&pd_rd_i=B0CJY3SM8S&psc=1)  
-
-## Sensirion CO2 Sensor
-Power Supply  
-3,3 ... 5,0 V -> Vdd-Pin
-
-I2C Addresses
-- 0x62
-
-## CCS811 Sensor Module
-Power Supply  
-1,8 ... 3,6 V -> Vcc-Pin
-
-I2C Addresses
-- 0x5A -> ADD-Pin Low
-- 0x5B -> ADD-Pin High
-
-## ENS160+AHT21 CO2 Room Temperature Module
-Power Supply  
-5 V -> VIN-Pin
-3,3 V -> 3V3-Pin
-
-I2C Addresses  
-- ENS160
-  - 0x52 -> ADD Pin LOW
-  - 0x53 -> ADD Pin HIGH 
-- AHT21
-  - 0x38 
+The AT-commands are also used in most of the cellular modules. This little example could be the blueprint for other IoT project.  
