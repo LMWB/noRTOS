@@ -52,7 +52,7 @@ My **personal** thoughts on when to use a RTOS vs when to use noRTOS
 - no need to worry about crazy terms like: mutexes, semaphores, task priorities, preemption, etc
 - mainly HAL driven
 - c-code only!
-    - no crazy JSON ore YAML file where nobody knows there syntax or what they are used for
+    - no crazy JSON or YAML file where nobody knows there syntax or what they are used for
 
 ## Cons
 - no support (not yet ;) for file-system, network-module, usb-stack
