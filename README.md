@@ -42,8 +42,10 @@ while (1) {}
 
 ```
 # Pros and Cons of noRTOS compared to "proper RTOS"
-With proper RTOS I mean the very popular freeRTOS, Azure-RTOS. But there are many more like the CMSIS-RTOS, mBedded-RTOS, Zephyr-RTOS, RIOT to name a few.  
-My **personal** thoughts on when to use a RTOS vs when to use noRTOS  
+With proper RTOS I mean the very popular [freeRTOS](https://www.freertos.org/) or [Azure-RTOS](https://github.com/azure-rtos) now open source as [ThreadX](https://en.wikipedia.org/wiki/ThreadX). But there are many more like the [Mbed-RTOS](https://os.mbed.com/mbed-os/), [Zephyr-RTOS](https://www.zephyrproject.org/), [RIOT](https://www.riot-os.org/) to name a few.  
+To get started with some sort of RTOS can be frustrating and time-killing.  
+
+Here are my **personal** thoughts on advantage and disadvantage to the use ot noRTOS.  
 
 ## Pros
 - no need to consider what RTOS should I use

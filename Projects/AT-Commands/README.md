@@ -1,7 +1,7 @@
 # ESP32 as Wifi Coprocessor with AT-Command-Firmware
-The ESP32 is a very pupular microcontroller with integrated Wifi and Bluetooth Hardware.
-The ESP32 is also avaliable as ready to use and pre CE certificated Modules with very attractive budget.  
-This approach is so succesfully, that it has become a serious compettitor to the well know Arduino Plattform.  
+The ESP32 is a very popular microcontroller with integrated Wifi and Bluetooth Hardware.
+The ESP32 is also available as ready to use and pre CE certificated Modules with very attractive budget.  
+This approach is so successfully, that it has become a serious competitor to the well know Arduino platform.  
 
 Many people use one ESP32 module and the Arduino IDE or PlattformIO IDE to create wireless projects.  
 But there is another way to bring your application online.  
