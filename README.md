@@ -42,7 +42,7 @@ while (1) {}
 
 ```
 # Pros and Cons of noRTOS compared to "proper RTOS"
-With proper RTOS I mean the very popular [freeRTOS](https://www.freertos.org/) or [Azure-RTOS](https://github.com/azure-rtos) now open source as [ThreadX](https://en.wikipedia.org/wiki/ThreadX). But there are many more like the [Mbed-RTOS](https://os.mbed.com/mbed-os/), [Zephyr-RTOS](https://www.zephyrproject.org/), [RIOT](https://www.riot-os.org/) to name a few.  
+With proper RTOS I mean the very popular [freeRTOS](https://www.freertos.org/) or [Azure-RTOS](https://github.com/azure-rtos) now open source as [ThreadX](https://en.wikipedia.org/wiki/ThreadX). But there are many more like the [Mbed-RTOS](https://os.mbed.com/mbed-os/), [Zephyr-RTOS](https://www.zephyrproject.org/) and [RIOT](https://www.riot-os.org/) to name a few.  
 To get started with some sort of RTOS can be frustrating and time-killing.  
 
 Here are my **personal** thoughts on advantage and disadvantage to the use ot noRTOS.  
