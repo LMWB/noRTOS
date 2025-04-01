@@ -10,7 +10,11 @@ With only two uart pins it is possible to bring any microcontroller to network.
 
 The AT-commands are also used in most of the cellular modules. This little example could be the blueprint for other IoT project.  
 
+![](../Images/Nucleo-ESP32-board.jpg)  
 ![](../Images/node-red-flow.jpg)  
 ![](../Images/node-red-dashboard1.jpg)  
 ![](../Images/node-red-dashboard2.jpg)  
-![](../Images/Nucleo-ESP32-board.jpg)  
+![](../Images/terminal-telemetry.jpg)  
+![](../Images/terminal-button-callback.jpg)  
+
+
