@@ -9,10 +9,12 @@
 #ifndef HARDWARE_GLOBAL_H
 #define HARDWARE_GLOBAL_H
 
+#define PLATFORM_HAS_RTC
+
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"
 #include "usart.h"
-#include "rtc.h"
+
 
 /* *** Platform delay (polling) ******************************************************** */
 #define MAX_DELAY        HAL_MAX_DELAY
@@ -81,11 +83,14 @@
 /* *** Watch Dog **************************************************************************/
 
 /* *** Real Time Clock ********************************************************************/
+#ifdef PLATFORM_HAS_RTC
+#include "rtc.h"
 #define RTC_HANDLER             hrtc
 #define RTC_INSTANCE            RTC
 #define SET_DEVICE_TIME(sTime)  HAL_RTC_SetTime( &RTC_HANDLER, sTime, RTC_FORMAT_BIN)
 #define SET_DEVICE_DATE(sDate)  HAL_RTC_SetDate( &RTC_HANDLER, sDate, RTC_FORMAT_BIN)
 #define GET_DEVICE_TIME(sTime)  HAL_RTC_GetTime( &RTC_HANDLER, sTime, RTC_FORMAT_BIN)
 #define GET_DEVICE_DATE(sDate)  HAL_RTC_GetDate( &RTC_HANDLER, sDate, RTC_FORMAT_BIN)
+#endif
 
 #endif /* HARDWARE_GLOBAL_H */

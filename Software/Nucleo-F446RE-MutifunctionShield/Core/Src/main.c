@@ -27,7 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "noRTOS.h"
-#include "multifunc.h"
+#include "BSP/multifunc.h"
 static uint8_t global_button_state = 0;
 static bool global_button_event = false;
 static uint32_t global_adc_value = 0;

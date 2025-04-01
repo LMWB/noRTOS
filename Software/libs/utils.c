@@ -31,6 +31,7 @@ void myprintf(const char *fmt, ...) {
 	UART_TERMINAL_SEND((uint8_t *) buffer, len);
 }
 
+#ifdef PLATFORM_HAS_I2C
 void scan_i2c_sensors(void) {
 	myprintf("Scanning I2C bus...\n");
 
@@ -51,7 +52,9 @@ void scan_i2c_sensors(void) {
 	myprintf("\r\n");
 	DELAY(1000);
 }
+#endif
 
+#ifdef PLATFORM_HAS_RTC
 struct tm *get_gmtime_stm32() {
 	/* Reference: https://cplusplus.com/reference/ctime/tm/
 	 *
@@ -167,7 +170,7 @@ uint8_t set_gmtime_stm32(struct tm *time) {
 	}
 	return 1;
 }
-
+#endif
 
 
 
