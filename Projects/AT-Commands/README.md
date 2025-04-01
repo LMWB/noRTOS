@@ -3,7 +3,7 @@ The ESP32 is a very popular microcontroller with integrated Wifi and Bluetooth h
 The ESP32 is also available as ready to use and pre CE certificated modules with very attractive budget.
 This approach makes it so successfully, that it has become a serious competitor to the well know Arduino platform.  
 
-Many people use one ESP32 module (e.g. LINK) and the Arduino IDE or PlattformIO IDE to create wireless projects.
+Many people use a random ESP32 module (e.g. [D1 Mini](https://www.az-delivery.de/products/esp32-d1-mini)) and the Arduino IDE or PlattformIO IDE to create wireless projects.
 But there is another way to bring your application online.
 The so called ESP32-AT-Command [firmware](https://docs.espressif.com/projects/esp-at/en/latest/esp32/AT_Command_Set/index.html) is a standalone piece of software running on the ESP32 tuning the ESP32 into a wireless-coprocessor.
 With only two uart pins it is possible to bring any microcontroller to network.
