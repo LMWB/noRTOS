@@ -36,7 +36,7 @@
 /* *** UART ***************************************************************** */
 #define UART_TERMINAL_HANDLER 	            huart2
 #define UART_TERMINAL_INSTANCE 	            USART2
-#define UART_SEND_TERMINAL(string, size)    HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
+#define UART_TERMINAL_SEND(string, size)    HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
 
 /* *** I2C ********************************************************************/
 

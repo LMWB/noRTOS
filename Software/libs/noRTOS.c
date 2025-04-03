@@ -74,7 +74,7 @@ void noRTOS_UART2_clear_rx_buffer(void){
 
 void noRTOS_UART2_echo_whats_been_received(void)
 {
-	UART_SEND_TERMINAL( uart2_buffer, rx_size);
+	UART_TERMINAL_SEND( uart2_buffer, rx_size);
 }
 
 void noRTOS_UART2_receive_byte_callback(void){

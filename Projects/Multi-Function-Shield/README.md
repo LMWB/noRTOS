@@ -1,0 +1,2 @@
+# Multifunction Shield
+This example uses the [multifunction shield](https://www.amazon.de/Hailege-Multifunktionale-Erweiterungskarte-Infrarot-Empf%C3%A4nger-Erweiterungsfunktion/dp/B07Y82V2SK/ref=asc_df_B07Y82V2SK?mcid=ca525e76b08b3d098cc3bf185179ebcf&th=1&psc=1&tag=googshopde-21&linkCode=df0&hvadid=696321262544&hvpos=&hvnetw=g&hvrand=6870903724215630989&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9042490&hvtargid=pla-1650224597464&psc=1&gad_source=1) to demonstrate "parallel" processing of multiple task.   

@@ -8,7 +8,9 @@ I'm sure there are many thousand different very good approaches out there on how
 Copy paste the ```noRTOS.c, noRTOS.h, utils.c, utils.h``` files to your project tree.
 Copy paste ```hardwareGlobal.h``` to you project tree and modify line ```19 #define GET_TICK()``` according to your platform.
 
-In ```main.c``` right before the ```int main(void)```  do the following. Create some callback function you like to run. Consider each as individual **non blocking** main()-loops.   
+In ```main.c``` right before the ```int main(void)```  do the following.
+Create some callback functions you like to run.
+Consider each as individual **non blocking** main()-loops.   
 
 ```
 void blinky(void) {
@@ -20,7 +22,7 @@ void test_callback1(void) {
 }
 
 ```
-Than right before ```while(1)``` super-loop create instances of ```noRTOS_task_t``` and add them to the scheduler.   
+After that and right before the ```while(1)``` super-loop create corresponding amount of instances of type ```noRTOS_task_t``` and add them to the scheduler.   
 
 ```
 noRTOS_task_t blinky_t = { .delay = eNORTOS_PERIODE_1s, .task_callback = blinky };
@@ -39,6 +41,27 @@ noRTOS_run_scheduler();
 while (1) {}
 
 ```
+# Pros and Cons of noRTOS compared to "proper RTOS"
+With proper RTOS I mean the very popular [freeRTOS](https://www.freertos.org/) or [Azure-RTOS](https://github.com/azure-rtos) now open source as [ThreadX](https://en.wikipedia.org/wiki/ThreadX). But there are many more like the [Mbed-RTOS](https://os.mbed.com/mbed-os/), [Zephyr-RTOS](https://www.zephyrproject.org/) and [RIOT](https://www.riot-os.org/) to name a few.  
+To get started with some sort of RTOS can be frustrating and time-killing.  
+
+Here are my **personal** thoughts on advantage and disadvantage to the use ot noRTOS.  
+
+## Pros
+- no need to consider what RTOS should I use
+- no licenses no costs
+- easy to debug without expensive tools or software
+- no need to worry about crazy terms like: mutexes, semaphores, task priorities, preemption, etc
+- mainly HAL driven
+- c-code only!
+    - no crazy JSON or YAML file where nobody knows there syntax or what they are used for
+
+## Cons
+- no support (not yet ;) for file-system, network-module, usb-stack
+- mainly HAL driven
+
 # Examples
-There are two examples. One very simple which uses a NucleoF446RE Board. It will work with every other Nucleo-Board, since the app uses just the blue onboard button, the LED and the UART2 which is rooted to the onboard STlink USB debugger.   
-Second example uses the [multifunction shield](https://www.amazon.de/Hailege-Multifunktionale-Erweiterungskarte-Infrarot-Empf%C3%A4nger-Erweiterungsfunktion/dp/B07Y82V2SK/ref=asc_df_B07Y82V2SK?mcid=ca525e76b08b3d098cc3bf185179ebcf&th=1&psc=1&tag=googshopde-21&linkCode=df0&hvadid=696321262544&hvpos=&hvnetw=g&hvrand=6870903724215630989&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9042490&hvtargid=pla-1650224597464&psc=1&gad_source=1) to demonstrate "parallel" processing of multiple task.   
+- [Basic Example](Projects/Basic-Nucleo/README.md)
+- [Multifunction Shield](Projects/Multi-Function-Shield/README.md)
+- [ESP32 as Wifi Coprocessor with AT-Command-Firmware](Projects/AT-Commands/README.md)
+- [Multi Sensor Reading and Processing](Projects/Multi-Sensors/README.md)

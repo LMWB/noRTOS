@@ -1,0 +1,669 @@
+[
+    {
+        "id": "4b271436518fd3b1",
+        "type": "tab",
+        "label": "EMQX-Tutorial",
+        "disabled": false,
+        "info": "Reference to\n\nhttps://www.emqx.com/en/blog/using-node-red-to-process-mqtt-data#installing-node-red\n\nhttps://noderedguide.com/lecture-7-node-red-dashboard-part2/\n\nhttps://noderedguide.com/tutorial-node-red-dashboards-multiple-lines-on-a-chart/\n\nFind the web client @  \nhttps://mqttx.app/web-client#/recent_connections/8dc002fe-dc48-4926-8760-bde4bbb4c859\n\nModify dashbord size @  \nhttps://www.youtube.com/watch?v=XrROfSabsPc",
+        "env": []
+    },
+    {
+        "id": "977b4ffb52c02193",
+        "type": "mqtt in",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "topic": "topic007",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "2576ce481523c739",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 200,
+        "y": 60,
+        "wires": [
+            [
+                "24d7b170f9d52ecc"
+            ]
+        ]
+    },
+    {
+        "id": "67c7796e918be6ca",
+        "type": "mqtt out",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "topic": "jiKEBRupldriwltofSUB1/button",
+        "qos": "1",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "2576ce481523c739",
+        "x": 1030,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "24d7b170f9d52ecc",
+        "type": "json",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 350,
+        "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fd49c2a28d47777e",
+        "type": "template",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "this is a test message from button!",
+        "output": "str",
+        "x": 760,
+        "y": 60,
+        "wires": [
+            [
+                "67c7796e918be6ca"
+            ]
+        ]
+    },
+    {
+        "id": "38a8f60e73f61537",
+        "type": "inject",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 560,
+        "wires": [
+            [
+                "c9e118483c8d29ab"
+            ]
+        ]
+    },
+    {
+        "id": "c9e118483c8d29ab",
+        "type": "function",
+        "z": "4b271436518fd3b1",
+        "name": "random",
+        "func": "var sin = {}\nvar cos = {}\n\nsin.payload = Math.round(Math.random()*100);\nsin.topic = 'sin';\n\ncos.payload = Math.round(Math.random()*100);\ncos.topic = 'cos';\n\nreturn [sin, cos];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 560,
+        "wires": [
+            [
+                "8cddee4b122e5e65"
+            ],
+            [
+                "ac3bacf6ad588628"
+            ]
+        ]
+    },
+    {
+        "id": "65e8b19125ca520b",
+        "type": "ui_chart",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "7c943b22d2abdf20",
+        "order": 0,
+        "width": "6",
+        "height": "4",
+        "label": "Trigonometry",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "-20",
+        "ymax": "20",
+        "removeOlder": "24",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": true,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 910,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8cddee4b122e5e65",
+        "type": "ui_gauge",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "8b9488226db5c819",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "gauge",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 630,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "ac3bacf6ad588628",
+        "type": "ui_gauge",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "8b9488226db5c819",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "wave",
+        "title": "gauge",
+        "label": "Units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 630,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "e6c3dc22d04f6397",
+        "type": "mqtt in",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "topic": "jiKEBRupldriwltofPUB/trigonometry",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "2576ce481523c739",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 200,
+        "y": 380,
+        "wires": [
+            [
+                "5a79edf7b2d00bb6",
+                "0deb32b33104a620"
+            ]
+        ]
+    },
+    {
+        "id": "5a79edf7b2d00bb6",
+        "type": "json",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 470,
+        "y": 380,
+        "wires": [
+            [
+                "bf864a423c96d456",
+                "868f77b7744677b8"
+            ]
+        ]
+    },
+    {
+        "id": "0deb32b33104a620",
+        "type": "debug",
+        "z": "4b271436518fd3b1",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "bf864a423c96d456",
+        "type": "debug",
+        "z": "4b271436518fd3b1",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "868f77b7744677b8",
+        "type": "function",
+        "z": "4b271436518fd3b1",
+        "name": "function 1",
+        "func": "var sin = {}\nvar cos = {}\nvar tan = {}\n\nsin.payload = msg.payload.sin;\nsin.topic = 'sin';\n\ncos.payload = msg.payload.cos;\ncos.topic = 'cos';\n\ntan.payload = msg.payload.tan;\ntan.topic = 'tan';\n\nreturn [sin, cos, tan];",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 380,
+        "wires": [
+            [
+                "5f47bc9c81d4e357",
+                "65e8b19125ca520b",
+                "5038f9222bf64722"
+            ],
+            [
+                "5f47bc9c81d4e357",
+                "65e8b19125ca520b",
+                "54b364bcf7ca42b3"
+            ],
+            [
+                "5f47bc9c81d4e357",
+                "65e8b19125ca520b",
+                "80bd8e35e303528b"
+            ]
+        ]
+    },
+    {
+        "id": "5f47bc9c81d4e357",
+        "type": "debug",
+        "z": "4b271436518fd3b1",
+        "name": "debug 3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "5038f9222bf64722",
+        "type": "ui_gauge",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "a32a08e8acc1572d",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "sin",
+        "label": "units",
+        "format": "{{value}}",
+        "min": "-10",
+        "max": "80",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 890,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "54b364bcf7ca42b3",
+        "type": "ui_gauge",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "a32a08e8acc1572d",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "cos",
+        "label": "units",
+        "format": "{{value}}",
+        "min": "-10",
+        "max": "80",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 890,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "80bd8e35e303528b",
+        "type": "ui_gauge",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "a32a08e8acc1572d",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "tan",
+        "label": "units",
+        "format": "{{value}}",
+        "min": "-10",
+        "max": "80",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 890,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "3ab7cde423281a04",
+        "type": "ui_button",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "7c943b22d2abdf20",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "button",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 590,
+        "y": 60,
+        "wires": [
+            [
+                "fd49c2a28d47777e"
+            ]
+        ]
+    },
+    {
+        "id": "6b9a3d07781843c0",
+        "type": "mqtt out",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "topic": "jiKEBRupldriwltofSUB2/slider",
+        "qos": "1",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "2576ce481523c739",
+        "x": 1020,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "4946e0e54f5fe509",
+        "type": "template",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "this is a test message from slider!",
+        "output": "str",
+        "x": 760,
+        "y": 120,
+        "wires": [
+            [
+                "67c7796e918be6ca"
+            ]
+        ]
+    },
+    {
+        "id": "52c7b872a945b332",
+        "type": "ui_button",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "group": "7c943b22d2abdf20",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "slider",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 590,
+        "y": 120,
+        "wires": [
+            [
+                "4946e0e54f5fe509"
+            ]
+        ]
+    },
+    {
+        "id": "eb793a84a87dbaac",
+        "type": "debug",
+        "z": "4b271436518fd3b1",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1020,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "f0f25a9735e252c3",
+        "type": "ui_slider",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "label": "slider",
+        "tooltip": "",
+        "group": "7c943b22d2abdf20",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "end",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": 10,
+        "step": 1,
+        "className": "",
+        "x": 590,
+        "y": 180,
+        "wires": [
+            [
+                "f15791783ab1e3fc"
+            ]
+        ]
+    },
+    {
+        "id": "f15791783ab1e3fc",
+        "type": "template",
+        "z": "4b271436518fd3b1",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{\"slider\":{{payload}}}",
+        "output": "json",
+        "x": 760,
+        "y": 180,
+        "wires": [
+            [
+                "6b9a3d07781843c0"
+            ]
+        ]
+    },
+    {
+        "id": "2576ce481523c739",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.emqx.io",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "7c943b22d2abdf20",
+        "type": "ui_group",
+        "name": "Group 1",
+        "tab": "6dbd45f972c694d4",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "8b9488226db5c819",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "60fb51cf290a9a62",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "a32a08e8acc1572d",
+        "type": "ui_group",
+        "name": "Group 2",
+        "tab": "60fb51cf290a9a62",
+        "order": 1,
+        "disp": true,
+        "width": 6
+    },
+    {
+        "id": "6dbd45f972c694d4",
+        "type": "ui_tab",
+        "name": "Tab 1",
+        "icon": "dashboard",
+        "order": 1
+    },
+    {
+        "id": "60fb51cf290a9a62",
+        "type": "ui_tab",
+        "name": "Tab 2",
+        "icon": "dashboard",
+        "order": 2
+    }
+]
