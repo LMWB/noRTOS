@@ -22,41 +22,5 @@ The Nucleo runs seven noRTOS tasks. One takes care of the connectivity state mac
 ![](../Images/terminal-telemetry.jpg)  
 ![](../Images/terminal-button-callback.jpg)  
 
-Here is a state diagram of what the AT-Command-Handler is doing.  
-```mermaid
----
-title: AT-Command
----
-stateDiagram-v2 
-    [*] --> boot_up
-    
-    boot_up --> wait_for_response
-    
-    connect_to_wifi --> wait_for_response
-    
-    connect_to_sntp --> wait_for_response
-    
-    request_sntp_time --> wait_for_response
-    
-    synch_rtc --> config_connection_to_broker : was not online before
-    synch_rtc --> online : was online before
-    
-    config_connection_to_broker --> wait_for_response
-    
-    connect_to_mqtt_broker --> wait_for_response
-    
-    subscribe_to_mqtt_msg --> wait_for_response
-    subscribe_to_mqtt_msg --> subscribe_to_mqtt_msg : topics left to subscribe to
-    subscribe_to_mqtt_msg --> online : subscribed to all topics from list
-
-    online --> online : xxx
-    online --> publish_mqtt_msg : xxx
-    online --> online : xxx
-
-    publish_mqtt_msg --> wait_for_response : xxx
-    publish_raw_mqtt_msg --> wait_for_response : xxx
-
-    wait_for_response --> wait_for_response : while needle not found
-    wait_for_response --> boot_up : AT-timeout
-    wait_for_response --> boot_up : AT-error
-```
+Here is a state diagram of what the AT-Command-Handler state machine is doing. The orange arrows shows the principal direction of states. But the FSM needs to run *wait for respons* for each transition to make sure the *AT-Command* and *AT-Response* handshakes are performed correct.  
+![](../Images/internet_FSM.png)
