@@ -382,3 +382,7 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 		state = new_state;
 	}
 }
+
+
+
+

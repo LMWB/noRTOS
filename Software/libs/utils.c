@@ -171,3 +171,10 @@ uint8_t set_gmtime_stm32(struct tm *time) {
 	return 1;
 }
 #endif
+
+
+
+
+
+
+
