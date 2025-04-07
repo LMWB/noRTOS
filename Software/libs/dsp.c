@@ -94,8 +94,7 @@ int16_t fir_int16(int16_t NewSample) {
  z = 0.570481 + j 0.349073
  ***************************************************************/
 #define Ntap 15
-
-float fir_flaot(float NewSample) {
+float fir_float(float NewSample) {
 	float FIRCoef[Ntap] = { -0.00302545400812832470, 0.00050546323844514475,
 			0.01123575532269642300, 0.03361348520434432500,
 			0.07094203156708520100, 0.12122527483689413000,
@@ -118,5 +117,8 @@ float fir_flaot(float NewSample) {
 		y += FIRCoef[n] * x[n];
 	}
 	return y;
+}
+
+void test(void){
 }
 
