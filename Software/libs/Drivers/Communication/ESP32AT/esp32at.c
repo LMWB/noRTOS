@@ -37,7 +37,7 @@ String ESP32_SET_SNTP_TIME 			= "AT+CIPSNTPCFG=1,0,\"zeit.fu-berlin.de\"\r\n";
 String ESP32_QUERY_TIMESTAMP 		= "AT+SYSTIMESTAMP?\r\n";
 String ESP32_QUERY_SNTP_TIME 		= "AT+CIPSNTPTIME?\r\n";
 
-String ESP32_SET_MQTT_CONFIG 		= "AT+MQTTUSERCFG=0,1,\"sc36ClientID\",\"emqx\",\"public\",0,0,\"\"\r\n";
+String ESP32_SET_MQTT_CONFIG 		= "AT+MQTTUSERCFG=0,1,\"c-code_client_1\",\"emqx\",\"public\",0,0,\"\"\r\n";
 String ESP32_QUERY_MQTT_CONNECTION 	= "AT+MQTTCONN?\r\n";
 String ESP32_SET_MQTT_CONNECTION 	= "AT+MQTTCONN=0,\"broker.emqx.io\",1883,1\r\n";
 String ESP32_CLOSE_MQTT_CONNECTION 	= "AT+MQTTCLEAN=0\r\n";
