@@ -90,7 +90,7 @@ void test_fir_int16(void) {
 
 	reset_filter();
 
-	// perform filter: strange
+	// perform filter: works
 	myprintf("impulseresponse: ");
 	for (uint16_t i = 0; i < TEST_FUNC_LENGTH; i++) {
 		output[i] = fir_int16( impulse[i] );
@@ -133,7 +133,7 @@ void test_fir_float(void) {
 
 		reset_filter();
 
-		// perform filter: strange
+		// perform filter: works
 		myprintf("impulseresponse: ");
 		for (uint16_t i = 0; i < TEST_FUNC_LENGTH; i++) {
 			f_output[i] = fir_float( f_impulse[i] );
@@ -142,6 +142,10 @@ void test_fir_float(void) {
 		myprintf("\n");
 
 		reset_filter();
+}
+
+void test_fir_int16_sin(){
+
 }
 
 

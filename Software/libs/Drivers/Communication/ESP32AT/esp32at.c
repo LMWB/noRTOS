@@ -228,15 +228,6 @@ void mqtt_client_fsm(mqtt_client_t *client) {
 	static bool fsm_is_online = false;
 
 	switch (state) {
-//	case undefined:
-//		printf("Undefined \n");
-//		new_state = boot_up;
-//		break;
-
-//	case standby:
-//		printf("Standby \n");
-//		new_state = standby;
-//		break;
 
 	case boot_up:
 		printf("Reseting ESP32\n");
