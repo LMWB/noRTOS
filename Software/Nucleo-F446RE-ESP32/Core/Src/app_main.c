@@ -2,7 +2,7 @@
 
 #include "noRTOS.h"
 #include "hardwareGlobal.h"
-#include "Drivers/Communication/ESP32AT/fifo.h"
+#include "Drivers/Communication/FIFO/fifo.h"
 #include "math.h"
 
 // Declare a global instance of mqtt_client

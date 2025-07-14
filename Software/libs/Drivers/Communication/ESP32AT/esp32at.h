@@ -1,7 +1,7 @@
 #ifndef DRIVERS_COMMUNICATION_ESP32AT_ESP32AT_H_
 #define DRIVERS_COMMUNICATION_ESP32AT_ESP32AT_H_
 #include <stdint.h>
-#include "fifo.h"
+#include "Drivers/Communication/FIFO/fifo.h"
 
 typedef enum{
 	 esp32_error = 0,
