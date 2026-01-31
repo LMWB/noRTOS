@@ -33,7 +33,7 @@
 		<link>
 			<name>libs</name>
 			<type>2</type>
-			<location>/home/lukas/work/git/LMWB/noRTOS/Software/libs</location>
+			<locationURI>PARENT-1-PROJECT_LOC/libs</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
