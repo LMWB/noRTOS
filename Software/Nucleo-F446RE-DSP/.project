@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Nucleo-F446RE-DRV89xxQ1</name>
+	<name>Nucleo-F446RE-DSP</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -29,4 +29,11 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>libs</name>
+			<type>2</type>
+			<location>/home/lukas/work/git/LMWB/noRTOS/Software/libs</location>
+		</link>
+	</linkedResources>
 </projectDescription>
