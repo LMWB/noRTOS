@@ -14,6 +14,15 @@
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
+  *
+  * Tested 31.01.2026 works well to drive LED on Bread Board IO
+  *
+  * todo
+  * implement CAN-Bus that is present on the DRV8908 Shield
+  * update the hardwareGlobal.h to something meaningful
+  *
+  *
+  *
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
