@@ -7,8 +7,9 @@
 #include "utils.h"
 
 
-#define NORTOS_VERSION_MINOR 2
-#define NORTOS_VERSION_MAYOR 1
+#define NORTOS_VERSION_MAYOR 2
+#define NORTOS_VERSION_MINOR 1
+
 
 #define NORTOS_SCHEDULAR_GET_TICK()	GET_TICK() // returns tick in milliseconds
 #define NORTOS_NO_OF_MAX_TASK		128
