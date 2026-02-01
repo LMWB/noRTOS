@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
 
 /**
  *

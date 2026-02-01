@@ -1,15 +1,16 @@
-/*
- * hardware_global.h
- *
- *  Created on: Nov 15, 2023
- *      Author: lukas
- *
- */
 
-#ifndef HARDWARE_GLOBAL_H
-#define HARDWARE_GLOBAL_H
+#ifndef PLATFORM_GLUE_H
+#define PLATFORM_GLUE_H
 
-//#define PLATFORM_HAS_RTC
+#define PLATFORM_STM32F446
+
+//#define HAS_UART
+//#define HAS_TIMER
+//#define HAS_I2C
+//#define HAS_SPI
+//#define HAS_WATCHDOG
+//#define HAS_CAN
+#define PLATFORM_HAS_RTC
 
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"
@@ -93,4 +94,4 @@
 #define GET_DEVICE_DATE(sDate)  HAL_RTC_GetDate( &RTC_HANDLER, sDate, RTC_FORMAT_BIN)
 #endif
 
-#endif /* HARDWARE_GLOBAL_H */
+#endif /* PLATFORM_GLUE_H*/

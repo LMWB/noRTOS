@@ -1,5 +1,5 @@
 #include "noRTOS.h"
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
 #include <string.h>
 /**
  * *************** Task Schedular ***************

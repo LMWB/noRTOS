@@ -38,7 +38,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "noRTOS.h"
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
 
 /* USER CODE END Includes */
 

@@ -1,15 +1,15 @@
-/*
- * hardware_global.h
- *
- *  Created on: Nov 15, 2023
- *      Author: lukas
- *
- */
+#ifndef PLATFORM_GLUE_H
+#define PLATFORM_GLUE_H
 
-#ifndef HARDWARE_GLOBAL_H
-#define HARDWARE_GLOBAL_H
+#define PLATFORM_STM32F446
 
+//#define PLATFORM_HAS_UART
+//#define PLATFORM_HAS_TIMER
 #define PLATFORM_HAS_I2C
+//#define PLATFORM_HAS_SPI
+//#define PLATFORM_HAS_WATCHDOG
+//#define PLATFORM_HAS_CAN
+//#define PLATFORM_HAS_RTC
 
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"
@@ -70,4 +70,4 @@
 
 /* *** Real Time Clock ********************************************************************/
 
-#endif /* HARDWARE_GLOBAL_H */
+#endif /* PLATFORM_GLUE_H */
