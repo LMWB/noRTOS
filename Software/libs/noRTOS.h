@@ -57,7 +57,11 @@ bool noRTOS_add_task_to_scheduler(noRTOS_task_t *task);
 /* runs once and once only just before scheduler */
 void noRTOS_setup(void);
 
-/* runs forever call calbacks on a regular basis which have been added using the noRTOS_add_task_to_scheduler() API */
+/* runs always without timing */
+void noRTOS_run_always(void);
+
+/* runs forever and fires calbacks on a regular basis which have been
+ * added using the noRTOS_add_task_to_scheduler() API */
 void noRTOS_run_scheduler(void);
 
 /* */

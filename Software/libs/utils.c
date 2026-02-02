@@ -1,12 +1,13 @@
 #include "utils.h"
 
-
+#ifdef PLATFORM_HAS_UART
 /* override _write, is used by puts and printf */
 int _write(int file, char *ptr, int len)
 {
     UART_TERMINAL_SEND((uint8_t*) ptr, (uint16_t)len);
 	return len;
 }
+#endif
 
 
 uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string) {

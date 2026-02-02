@@ -78,9 +78,11 @@ void noRTOS_run_scheduler(void) {
 
 	while(1){
 		uint32_t now = NORTOS_SCHEDULAR_GET_TICK();
+		/* task that executes always */
+		noRTOS_run_always();
 
 		for(uint_fast32_t i = 0; i < number_of_active_task; i++){
-			/* task that executes always */
+			/* task that executes always also in between regular timed tasks */
 			noRTOS_run_always();
 
 			/* task that execute with specific timings */
