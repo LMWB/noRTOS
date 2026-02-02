@@ -4,11 +4,11 @@
 
 #define PLATFORM_STM32F446
 
-//#define HAS_UART
-//#define HAS_TIMER
-//#define HAS_I2C
-//#define HAS_SPI
-//#define HAS_WATCHDOG
+//#define PLATFORM_HAS_UART
+//#define PLATFORM_HAS_TIMER
+//#define PLATFORM_HAS_I2C
+//#define PLATFORM_HAS_SPI
+//#define PLATFORM_HAS_WATCHDOG
 //#define HAS_CAN
 #define PLATFORM_HAS_RTC
 

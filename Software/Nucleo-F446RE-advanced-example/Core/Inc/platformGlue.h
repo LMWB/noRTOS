@@ -3,7 +3,7 @@
 
 #define PLATFORM_STM32F446
 
-//#define PLATFORM_HAS_UART
+#define HAS_UART
 //#define PLATFORM_HAS_TIMER
 //#define PLATFORM_HAS_I2C
 //#define PLATFORM_HAS_SPI
