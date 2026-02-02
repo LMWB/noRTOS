@@ -8,6 +8,40 @@
 noRTOS_task_t *global_list_of_tasks[NORTOS_NO_OF_MAX_TASK];
 static uint32_t number_of_active_task = 0;
 
+static uint8_t noRTOS_interrupt_flag = 0;
+
+#define BIT_MASK_RESET_ALL		0b00000000 /* 0 */
+#define BIT_MASK_DI_INTERRUPT	0b00000001 /* 1 */
+#define BIT_MASK_UART_INTERRUPT	0b00000010 /* 2 */
+#define BIT_MASK_CAN_INTERRUPT	0b00000100 /* 3 */
+#define BIT_MASK_RESERVED1		0b00001000 /* 4 */
+#define BIT_MASK_RESERVED2		0b00010000 /* 5 */
+#define BIT_MASK_RESERVED3		0b00100000 /* 6 */
+#define BIT_MASK_RESERVED4		0b01000000 /* 7 */
+#define BIT_MASK_RESERVED5		0b10000000 /* 8 */
+
+static void set_bit_in_byte(const uint8_t bit, uint8_t* byte){
+	*byte |= bit;
+}
+
+static void clear_bit_in_byte(const uint8_t bit, uint8_t* byte){
+	*byte &= ~bit;
+}
+
+static void clear_all_bits_in_byte(uint8_t* byte){
+	*byte = 0;
+}
+
+/* blue print  for more callbacks of this kind */
+bool noRTOS_wait_for_eventX(uint8_t event){
+	if( noRTOS_interrupt_flag & event){
+		clear_bit_in_byte(event, &noRTOS_interrupt_flag);
+		return true;
+	}else{
+		return false;
+	}
+}
+
 
 void noRTOS_print_version(void){
 	printf("booting from noRTOS Version: %d.%d\n", NORTOS_VERSION_MAYOR, NORTOS_VERSION_MINOR);
@@ -31,6 +65,11 @@ __weak void noRTOS_setup(void){
 	;
 }
 
+/* override this with your implementation */
+__weak void noRTOS_run_always(void){
+	;
+}
+
 void noRTOS_run_scheduler(void) {
 
 	noRTOS_print_version();
@@ -41,6 +80,10 @@ void noRTOS_run_scheduler(void) {
 		uint32_t now = NORTOS_SCHEDULAR_GET_TICK();
 
 		for(uint_fast32_t i = 0; i < number_of_active_task; i++){
+			/* task that executes always */
+			noRTOS_run_always();
+
+			/* task that execute with specific timings */
 			if( (now - global_list_of_tasks[i]->tick) >= global_list_of_tasks[i]->delay){
 				global_list_of_tasks[i]->tick = now;
 				global_list_of_tasks[i]->task_callback();

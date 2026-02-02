@@ -24,6 +24,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "platformGlue.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,9 +90,14 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  /* USER CODE BEGIN 2 */
+	/* USER CODE BEGIN 2 */
 
-  /* USER CODE END 2 */
+	/* read the STM32 CPU unique ID, could be handy to have for various
+	 * things in software since this is is a singular number world wide */
+	cpu_uid_t cpu_id;
+	READ_CPU_UID(cpu_id);
+
+	/* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */

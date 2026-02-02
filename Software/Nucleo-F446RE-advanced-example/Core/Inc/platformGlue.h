@@ -3,7 +3,7 @@
 
 #define PLATFORM_STM32F446
 
-#define HAS_UART
+#define PLATFORM_HAS_UART
 //#define PLATFORM_HAS_TIMER
 //#define PLATFORM_HAS_I2C
 //#define PLATFORM_HAS_SPI
@@ -58,30 +58,31 @@
 
 
 /* *** UART *************************************************************************** */
+#ifdef PLATFORM_HAS_UART
 #define UART_TERMINAL_HANDLER 	            		huart2
 #define UART_TERMINAL_INSTANCE 	            		USART2
 #define UART_TERMINAL_SEND(string, size)    		HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
 
 #define UART_TERMINAL_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(&UART_TERMINAL_HANDLER, buffer, 1)
 #define UART_TERMINAL_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_TERMINAL_HANDLER, buffer, size)
-
-
-#define UART_INTERNET_HANDLER 	            		huart1
-#define UART_INTERNET_INSTANCE 	            		USART1
-#define UART_INTERNET_SEND(string, size)    		HAL_UART_Transmit(&UART_INTERNET_HANDLER, string, size, HAL_MAX_DELAY)
-
-#define UART_INTERNET_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(			&UART_INTERNET_HANDLER, buffer, 1)
-#define UART_INTERNET_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(	&UART_INTERNET_HANDLER, buffer, size)
-#define UART_INTERNET_ABORT_IRQ()					HAL_UART_AbortReceive_IT(		&UART_INTERNET_HANDLER)
+#endif
 
 /* *** I2C ********************************************************************************/
+#ifdef PLATFORM_HAS_I2C
 
+#endif
 /* *** SPI ********************************************************************************/
+#ifdef PLATFORM_HAS_SPI
 
+#endif
 /* *** Hardware Timer *********************************************************************/
+#ifdef PLATFORM_HAS_TIMER
 
+#endif
 /* *** Watch Dog **************************************************************************/
+#ifdef PLATFORM_HAS_WATCHDOG
 
+#endif
 /* *** Real Time Clock ********************************************************************/
 #ifdef PLATFORM_HAS_RTC
 #include "rtc.h"
@@ -92,5 +93,27 @@
 #define GET_DEVICE_TIME(sTime)  HAL_RTC_GetTime( &RTC_HANDLER, sTime, RTC_FORMAT_BIN)
 #define GET_DEVICE_DATE(sDate)  HAL_RTC_GetDate( &RTC_HANDLER, sDate, RTC_FORMAT_BIN)
 #endif
+
+/* *** CAN ********************************************************************/
+#ifdef PLATFORM_HAS_RTC
+#include "can.h"
+#define CAN_HANDLER 							hcan
+#define CAN_INSTANCE            				CAN
+#define CAN_CONFIGURE_FILTER(canFilterConfig)	HAL_CAN_ConfigFilter(&CAN_HANDLER, &canFilterConfig)
+#define CAN_START_PERIPHERAL() 					HAL_CAN_Start(&CAN_HANDLER)
+#define CAN_STOP_PERIPHERAL() 					HAL_CAN_Stop(&CAN_HANDLER)
+#define CAN_ACTIVATE_RX_INTERRUPT() 			HAL_CAN_ActivateNotification(&CAN_HANDLER, CAN_IT_RX_FIFO0_MSG_PENDING)
+static uint32_t  TxMailbox1;
+#define SEND_CAN_MESSAGE(txHeader, txData) 		HAL_CAN_AddTxMessage(&CAN_HANDLER, &txHeader, txData, &TxMailbox1);
+#endif
+
+/* *** UID ********************************************************************/
+typedef union {
+	uint32_t uid[3];
+	uint8_t uid_byte[12]; // 3 * uint32 = 3 * 4bytes = 12 uint8
+} cpu_uid_t;
+
+#define READ_CPU_UID(cpu_uid_type)	{cpu_uid_type.uid[0] = HAL_GetUIDw0(); cpu_uid_type.uid[1] = HAL_GetUIDw1(); cpu_uid_type.uid[2] = HAL_GetUIDw2();}
+
 
 #endif /* PLATFORM_GLUE_H */
