@@ -63,8 +63,9 @@
 #define UART_TERMINAL_INSTANCE 	            		USART2
 #define UART_TERMINAL_SEND(string, size)    		HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
 
-#define UART_TERMINAL_READ_BYTE_IRQ(buffer)			HAL_UART_Receive_IT(&UART_TERMINAL_HANDLER, buffer, 1)
-#define UART_TERMINAL_READ_LINE_IRQ(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_TERMINAL_HANDLER, buffer, size)
+#define UART_TERMINAL_READ_BYTE_IRQ(buffer)				HAL_UART_Receive_IT(&UART_TERMINAL_HANDLER, buffer, 1)
+#define UART_TERMINAL_READ_LINE_IRQ(buffer, size)		HAL_UARTEx_ReceiveToIdle_IT(&UART_TERMINAL_HANDLER, buffer, size)
+#define UART_TERMINAL_READ_LINE_IRQ_DMA(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_TERMINAL_HANDLER, buffer, size)
 #endif
 
 /* *** I2C ********************************************************************************/

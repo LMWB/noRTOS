@@ -69,6 +69,8 @@ void noRTOS_setup(void) {
 	printf("STM32 UUID (int): %ld-%ld-%ld \r\n", cpu_id.uid[0], cpu_id.uid[1], cpu_id.uid[2]);
 	printf("STM32 UUID (hex): 0x%08lX-0x%08lX-0x%08lX \r\n", cpu_id.uid[0], cpu_id.uid[1], cpu_id.uid[2]);
 	printf("\r\n");
+
+	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 }
 
 /* override*/
@@ -180,6 +182,21 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/* *************** STM32 HAL Based UART Bridge with RX-byte (char) interrupt *************** */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	if (huart->Instance == UART_TERMINAL_INSTANCE){
+		//uart_increment_pointer();
+		UART_TERMINAL_READ_BYTE_IRQ( uart2_buffer );
+	}
+}
+
+/* *************** STM32 HAL Based UART Bridge with RX-line interrupt *************** */
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+	if (huart->Instance == UART_TERMINAL_INSTANCE){
+		UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
+	}
+}
 
 /* USER CODE END 4 */
 

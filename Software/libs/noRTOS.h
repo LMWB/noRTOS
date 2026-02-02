@@ -10,7 +10,6 @@
 #define NORTOS_VERSION_MAYOR 2
 #define NORTOS_VERSION_MINOR 1
 
-
 #define NORTOS_SCHEDULAR_GET_TICK()	GET_TICK() // returns tick in milliseconds
 #define NORTOS_NO_OF_MAX_TASK		128
 
@@ -70,16 +69,4 @@ void noRTOS_print_version(void);
 /* */
 void noRTOS_print_active_task_running(void);
 
-
-/**
- * *************** temporary UART 2 Handler ***************
- */
-
-#define UART_BUFFER_SIZE 128
-extern uint8_t 	uart2_buffer[UART_BUFFER_SIZE];
-bool noRTOS_is_UART2_read_line_complete(void);
-void noRTOS_UART2_read_byte_with_interrupt(void);
-void noRTOS_UART2_clear_rx_buffer(void);
-void noRTOS_UART2_echo_whats_been_received(void);
-void noRTOS_UART2_receive_byte_callback(void);
 #endif /* NORTOS_H_ */
