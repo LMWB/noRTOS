@@ -73,9 +73,9 @@ void noRTOS_setup(void) {
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 }
 
-/* override*/
-void noRTOS_run_always(void) {
-	//printf("Hello World\n");
+/* override */
+void noRTOS_UART_RX_IRQ(void){
+	printf("hello world\n");
 }
 
 void blink_LED(void) {
@@ -194,6 +194,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 /* *************** STM32 HAL Based UART Bridge with RX-line interrupt *************** */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
+		noRTOS_set_interrupt_received_flag(BIT_MASK_UART_INTERRUPT);
 		UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 	}
 }

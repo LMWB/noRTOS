@@ -15,6 +15,19 @@
 
 typedef void(*VoidFunctionPointer)(void);
 
+#define BIT_MASK_RESET_ALL		0b00000000 /* 0 */
+#define BIT_MASK_DI_INTERRUPT	0b00000001 /* 1 */
+#define BIT_MASK_UART_INTERRUPT	0b00000010 /* 2 */
+#define BIT_MASK_CAN_INTERRUPT	0b00000100 /* 3 */
+#define BIT_MASK_RESERVED1		0b00001000 /* 4 */
+#define BIT_MASK_RESERVED2		0b00010000 /* 5 */
+#define BIT_MASK_RESERVED3		0b00100000 /* 6 */
+#define BIT_MASK_RESERVED4		0b01000000 /* 7 */
+#define BIT_MASK_RESERVED5		0b10000000 /* 8 */
+
+void noRTOS_set_interrupt_received_flag(uint8_t event_type);
+bool noRTOS_wait_for_eventX(			uint8_t event_type);
+
 typedef enum {
 	eNORTOS_PERIODE_1ms 	= 1,
 	eNORTOS_PERIODE_2ms 	= 2,
@@ -55,9 +68,6 @@ bool noRTOS_add_task_to_scheduler(noRTOS_task_t *task);
 
 /* runs once and once only just before scheduler */
 void noRTOS_setup(void);
-
-/* runs always without timing */
-void noRTOS_run_always(void);
 
 /* runs forever and fires calbacks on a regular basis which have been
  * added using the noRTOS_add_task_to_scheduler() API */
