@@ -75,7 +75,11 @@ void noRTOS_setup(void) {
 
 /* override */
 void noRTOS_UART_RX_IRQ(void){
-	printf("hello world\n");
+	/* do some stuff you like to do when IRQ has triggered */
+	printf("received UART interrupt\n");
+
+	/* now since the IRQ callback has been executed, we can restart the IRQ trigger */
+	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 }
 
 void blink_LED(void) {
@@ -195,7 +199,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
 		noRTOS_set_interrupt_received_flag(BIT_MASK_UART_INTERRUPT);
-		UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 	}
 }
 
