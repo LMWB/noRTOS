@@ -69,6 +69,18 @@ bool noRTOS_add_task_to_scheduler(noRTOS_task_t *task);
 /* runs once and once only just before scheduler */
 void noRTOS_setup(void);
 
+/* override this with your implementation */
+void noRTOS_DIGITAL_INPUT_IRQ(void);
+
+/* override this with your implementation */
+void noRTOS_UART_RX_IRQ(void);
+
+/* override this with your implementation */
+void noRTOS_CAN_RX_IRQ(void);
+
+/* override this with your implementation */
+void noRTOS_RESERVED_IRQ(void);
+
 /* runs forever and fires calbacks on a regular basis which have been
  * added using the noRTOS_add_task_to_scheduler() API */
 void noRTOS_run_scheduler(void);

@@ -10,7 +10,7 @@ __weak void noRTOS_setup(void){
 }
 
 /* override this with your implementation */
-__weak void noRTOS_DIGITAL_INPU_IRQ(void){
+__weak void noRTOS_DIGITAL_INPUT_IRQ(void){
 	;
 }
 
@@ -97,7 +97,7 @@ static void noRTOS_run_always(void) {
 
 		if (noRTOS_interrupt_flag & BIT_MASK_DI_INTERRUPT) {
 			// do something
-			noRTOS_DIGITAL_INPU_IRQ();
+			noRTOS_DIGITAL_INPUT_IRQ();
 			clear_bit_in_byte(BIT_MASK_DI_INTERRUPT, &noRTOS_interrupt_flag);
 		}
 
