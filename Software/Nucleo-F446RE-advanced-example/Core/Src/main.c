@@ -73,6 +73,7 @@ void noRTOS_setup(void) {
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 }
 
+/* -------- Asynchronous Tasks ----------------- */
 /* override */
 void noRTOS_UART_RX_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
@@ -87,8 +88,53 @@ void noRTOS_DIGITAL_INPUT_IRQ(void){
 	printf("Digital Input interrupt\n");
 }
 
+/* -------- Synchronous Tasks ----------------- */
+
 void blink_LED(void) {
 	NUCLEO_LED_toggle();
+}
+
+uint8_t read_gpio(uint8_t slot) {
+	uint8_t return_value = 0;
+	switch (slot) {
+	case 0:
+		return_value = READ_PIN(DI1_GPIO_Port, DI1_Pin);
+		break;
+	case 1:
+		return_value = READ_PIN(DI2_GPIO_Port, DI2_Pin);
+		break;
+	case 2:
+		return_value = READ_PIN(DI3_GPIO_Port, DI3_Pin);
+		break;
+	case 3:
+		return_value = READ_PIN(DI4_GPIO_Port, DI4_Pin);
+		break;
+	default:
+		break;
+	}
+	return return_value;
+}
+
+static uint32_t gButton_states = 0x80000000;
+
+/* this is a kind of software interrupt */
+void read_button_states(void){
+	uint32_t button_states = 0;
+	for (uint_fast8_t i = 0;  i < 4; ++ i) {
+		button_states |= read_gpio(i) << i;
+	}
+
+	/* because of inverted logic (pull ups), flip all bits and limit to 18 digits*/
+	button_states = ~button_states;
+	button_states = (button_states & 0xF); // 4 buttons max in ths example
+
+	if (button_states != gButton_states) {
+		/* save the new flag globally */
+		gButton_states = button_states;
+
+		/* do stuff when button state has changed*/
+		printf("Digital Input software interrupt\n");
+	}
 }
 
 /* USER CODE END 0 */
@@ -124,9 +170,12 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
+	noRTOS_add_task_to_scheduler(&buttons);
 
 	noRTOS_task_t blinky = { .delay = eNORTOS_PERIODE_500ms, .task_callback = blink_LED };
 	noRTOS_add_task_to_scheduler(&blinky);
+
 	noRTOS_run_scheduler();
 
 	/* never get here! */

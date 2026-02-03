@@ -56,6 +56,9 @@
 #define LED4_OFF() 				HAL_GPIO_WritePin(  USER_LED4_GPIO_Port, USER_LED4_Pin, GPIO_PIN_RESET)
 #define LED4_TOGGLE()			HAL_GPIO_TogglePin( USER_LED4_GPIO_Port, USER_LED4_Pin)
 
+#define TOGGLE_PIN(PORT, PIN)		HAL_GPIO_TogglePin(PORT, PIN)			/* void HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) */
+#define WRITE_PIN(PORT, PIN, STATE)	HAL_GPIO_WritePin(PORT, PIN, STATE); 	/* void HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) */
+#define READ_PIN(PORT, PIN)			HAL_GPIO_ReadPin(PORT, PIN)
 
 /* *** UART *************************************************************************** */
 #ifdef PLATFORM_HAS_UART
