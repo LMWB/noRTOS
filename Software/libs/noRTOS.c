@@ -44,6 +44,7 @@ __weak void noRTOS_RESERVED_IRQ(void){
 noRTOS_task_t *global_list_of_tasks[NORTOS_NO_OF_MAX_TASK];
 static uint32_t number_of_active_task = 0;
 static uint8_t noRTOS_interrupt_flag = 0;
+static uint8_t noRTOS_event_flag = 0;
 
 /* (private) local getter / setter */
 static void set_bit_in_byte(const uint8_t bit, uint8_t* byte){
@@ -63,14 +64,17 @@ void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type){
 	set_bit_in_byte(event_type, &noRTOS_interrupt_flag);
 }
 
+void noRTOS_set_event_received_flag(interrupt_bit_mask event_type){
+	set_bit_in_byte(event_type, &noRTOS_event_flag);
+}
+
 /* blue print  for more callbacks of this kind */
-bool noRTOS_wait_for_eventX(interrupt_bit_mask event_type){
-	if( noRTOS_interrupt_flag & event_type){
-		clear_bit_in_byte(event_type, &noRTOS_interrupt_flag);
+bool noRTOS_wait_for_event(interrupt_bit_mask event_type) {
+	if (noRTOS_event_flag & event_type) {
+		clear_bit_in_byte(event_type, &noRTOS_event_flag);
 		return true;
-	}else{
-		return false;
 	}
+	return false;
 }
 
 

@@ -42,7 +42,7 @@ void noRTOS_ADC_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 
 	/* restart ADC sampling */
-	ADC_START_DMA(&gADC_raw_data);
+	//ADC_START_DMA(&gADC_raw_data);
 }
 
 /* -------- Synchronous Tasks ----------------- */
@@ -92,6 +92,17 @@ void read_button_states(void){
 	}
 }
 
+void process_analog_readings(void){
+	if( noRTOS_wait_for_event(eBIT_MASK_ADC_INTERRUPT) ){
+		/* do stuff like digital filtering etc. */
+		__NOP();
+
+		/* finally restart adc sampling */
+		ADC_START_DMA(&gADC_raw_data);
+	}
+
+}
+
 
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
@@ -99,6 +110,9 @@ void app_demo_main(void){
 
 	noRTOS_task_t blinky = { .delay = eNORTOS_PERIODE_500ms, .task_callback = blink_LED };
 	noRTOS_add_task_to_scheduler(&blinky);
+
+	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_500ms, .task_callback = process_analog_readings };
+	noRTOS_add_task_to_scheduler(&analog);
 
 	noRTOS_run_scheduler();
 }
@@ -129,5 +143,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC_INSTANCE){
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_ADC_INTERRUPT);
+		noRTOS_set_event_received_flag(eBIT_MASK_ADC_INTERRUPT);
 	}
 }

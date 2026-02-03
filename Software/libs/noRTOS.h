@@ -32,9 +32,6 @@ typedef enum{
 	eBIT_MASK_RESERVED5 		= 0b10000000,
 } interrupt_bit_mask;
 
-void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type);
-bool noRTOS_wait_for_eventX(			interrupt_bit_mask event_type);
-
 typedef enum {
 	eNORTOS_PERIODE_1ms 	= 1,
 	eNORTOS_PERIODE_2ms 	= 2,
@@ -87,6 +84,13 @@ void noRTOS_CAN_RX_IRQ(void);
 
 /* override this with your implementation */
 void noRTOS_ADC_IRQ(void);
+
+void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type);
+
+void noRTOS_set_event_received_flag(interrupt_bit_mask event_type);
+
+bool noRTOS_wait_for_event(			interrupt_bit_mask event_type);
+
 
 /* runs forever and fires calbacks on a regular basis which have been
  * added using the noRTOS_add_task_to_scheduler() API */
