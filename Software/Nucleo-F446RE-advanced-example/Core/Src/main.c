@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
+#include "dma.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -31,6 +33,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+
+static uint32_t gButton_states = 0x80000000;
+static uint16_t gADC_raw_data[ADC_NO_OF_CHANNELS];
 
 /* USER CODE END PTD */
 
@@ -71,6 +76,7 @@ void noRTOS_setup(void) {
 	printf("\r\n");
 
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
+	ADC_START_DMA(&gADC_raw_data);
 }
 
 /* -------- Asynchronous Tasks ----------------- */
@@ -86,6 +92,13 @@ void noRTOS_UART_RX_IRQ(void){
 void noRTOS_DIGITAL_INPUT_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 	printf("Digital Input interrupt\n");
+}
+
+void noRTOS_ADC_IRQ(void){
+	/* do some stuff you like to do when IRQ has triggered */
+
+	/* restart ADC sampling */
+	ADC_START_DMA(&gADC_raw_data);
 }
 
 /* -------- Synchronous Tasks ----------------- */
@@ -114,8 +127,6 @@ uint8_t read_gpio(uint8_t slot) {
 	}
 	return return_value;
 }
-
-static uint32_t gButton_states = 0x80000000;
 
 /* this is a kind of software interrupt */
 void read_button_states(void){
@@ -168,7 +179,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
@@ -256,10 +269,17 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	}
 }
 
-/* *************** STM32 HAL Based digital input interrupt *************** */
+/* *************** STM32 HAL Based GPIO input interrupt *************** */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == B1_Pin){
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_DI_INTERRUPT);
+	}
+}
+
+/* *************** STM32 HAL Based ADC input interrupt *************** */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
+	if(hadc->Instance == ADC_INSTANCE){
+		noRTOS_set_interrupt_received_flag(eBIT_MASK_ADC_INTERRUPT);
 	}
 }
 

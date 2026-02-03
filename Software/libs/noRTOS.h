@@ -25,7 +25,7 @@ typedef enum{
 	eBIT_MASK_DI_INTERRUPT 		= 0b00000001,
 	eBIT_MASK_UART_INTERRUPT 	= 0b00000010,
 	eBIT_MASK_CAN_INTERRUPT 	= 0b00000100,
-	eBIT_MASK_RESERVED1 		= 0b00001000,
+	eBIT_MASK_ADC_INTERRUPT		= 0b00001000,
 	eBIT_MASK_RESERVED2 		= 0b00010000,
 	eBIT_MASK_RESERVED3 		= 0b00100000,
 	eBIT_MASK_RESERVED4 		= 0b01000000,
@@ -86,7 +86,7 @@ void noRTOS_UART_RX_IRQ(void);
 void noRTOS_CAN_RX_IRQ(void);
 
 /* override this with your implementation */
-void noRTOS_RESERVED_IRQ(void);
+void noRTOS_ADC_IRQ(void);
 
 /* runs forever and fires calbacks on a regular basis which have been
  * added using the noRTOS_add_task_to_scheduler() API */

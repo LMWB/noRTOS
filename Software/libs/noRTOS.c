@@ -25,6 +25,11 @@ __weak void noRTOS_CAN_RX_IRQ(void){
 }
 
 /* override this with your implementation */
+__weak void noRTOS_ADC_IRQ(void){
+	;
+}
+
+/* override this with your implementation */
 __weak void noRTOS_RESERVED_IRQ(void){
 	;
 }
@@ -112,6 +117,12 @@ static void noRTOS_run_always(void) {
 			// do something
 			noRTOS_CAN_RX_IRQ();
 			clear_bit_in_byte(eBIT_MASK_CAN_INTERRUPT, &noRTOS_interrupt_flag);
+		}
+
+		if (noRTOS_interrupt_flag & eBIT_MASK_ADC_INTERRUPT) {
+			// do something
+			noRTOS_ADC_IRQ();
+			clear_bit_in_byte(eBIT_MASK_ADC_INTERRUPT, &noRTOS_interrupt_flag);
 		}
 	}
 }

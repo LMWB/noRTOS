@@ -10,11 +10,10 @@
 //#define PLATFORM_HAS_WATCHDOG
 //#define PLATFORM_HAS_CAN
 //#define PLATFORM_HAS_RTC
+#define PLATFORM_HAS_ADC
 
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"
-#include "usart.h"
-
 
 /* *** Platform delay (polling) ******************************************************** */
 #define MAX_DELAY        HAL_MAX_DELAY
@@ -62,6 +61,7 @@
 
 /* *** UART *************************************************************************** */
 #ifdef PLATFORM_HAS_UART
+#include "usart.h"
 #define UART_TERMINAL_HANDLER 	            		huart2
 #define UART_TERMINAL_INSTANCE 	            		USART2
 #define UART_TERMINAL_SEND(string, size)    		HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
@@ -109,6 +109,20 @@
 #define CAN_ACTIVATE_RX_INTERRUPT() 			HAL_CAN_ActivateNotification(&CAN_HANDLER, CAN_IT_RX_FIFO0_MSG_PENDING)
 static uint32_t  TxMailbox1;
 #define SEND_CAN_MESSAGE(txHeader, txData) 		HAL_CAN_AddTxMessage(&CAN_HANDLER, &txHeader, txData, &TxMailbox1);
+#endif
+
+#ifdef PLATFORM_HAS_ADC
+#include "adc.h"
+#define ADC_HANDLER 				hadc1
+#define ADC_INSTANCE				ADC1
+#define ADC_NO_OF_CHANNELS 			7
+#define ADC_CHANNELS_RESISTOR_1		0
+#define ADC_CHANNELS_RESISTOR_2		1
+#define ADC_CHANNELS_VOLTAGE_1		2
+#define ADC_CHANNELS_VOLTAGE_2		3
+#define ADC_CHANNELS_POWER_SUPPLY	4
+
+#define ADC_START_DMA(pADC_raw_data_buffer)		HAL_ADC_Start_DMA(&ADC_HANDLER, (uint32_t*) pADC_raw_data_buffer, ADC_NO_OF_CHANNELS)
 #endif
 
 /* *** UID ********************************************************************/
