@@ -40,7 +40,7 @@ noRTOS_task_t *global_list_of_tasks[NORTOS_NO_OF_MAX_TASK];
 static uint32_t number_of_active_task = 0;
 static uint8_t noRTOS_interrupt_flag = 0;
 
-
+/* (private) local getter / setter */
 static void set_bit_in_byte(const uint8_t bit, uint8_t* byte){
 	*byte |= bit;
 }
@@ -53,12 +53,13 @@ static void clear_all_bits_in_byte(uint8_t* byte){
 	*byte = 0;
 }
 
-void noRTOS_set_interrupt_received_flag(uint8_t event_type){
+/* public */
+void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type){
 	set_bit_in_byte(event_type, &noRTOS_interrupt_flag);
 }
 
 /* blue print  for more callbacks of this kind */
-bool noRTOS_wait_for_eventX(uint8_t event_type){
+bool noRTOS_wait_for_eventX(interrupt_bit_mask event_type){
 	if( noRTOS_interrupt_flag & event_type){
 		clear_bit_in_byte(event_type, &noRTOS_interrupt_flag);
 		return true;
@@ -95,22 +96,22 @@ static void noRTOS_run_always(void) {
 	if (noRTOS_interrupt_flag != 0) {
 		// check for WHICH bit is set
 
-		if (noRTOS_interrupt_flag & BIT_MASK_DI_INTERRUPT) {
+		if (noRTOS_interrupt_flag & eBIT_MASK_DI_INTERRUPT) {
 			// do something
 			noRTOS_DIGITAL_INPUT_IRQ();
-			clear_bit_in_byte(BIT_MASK_DI_INTERRUPT, &noRTOS_interrupt_flag);
+			clear_bit_in_byte(eBIT_MASK_DI_INTERRUPT, &noRTOS_interrupt_flag);
 		}
 
-		if (noRTOS_interrupt_flag & BIT_MASK_UART_INTERRUPT) {
+		if (noRTOS_interrupt_flag & eBIT_MASK_UART_INTERRUPT) {
 			// do something
 			noRTOS_UART_RX_IRQ();
-			clear_bit_in_byte(BIT_MASK_UART_INTERRUPT, &noRTOS_interrupt_flag);
+			clear_bit_in_byte(eBIT_MASK_UART_INTERRUPT, &noRTOS_interrupt_flag);
 		}
 
-		if (noRTOS_interrupt_flag & BIT_MASK_CAN_INTERRUPT) {
+		if (noRTOS_interrupt_flag & eBIT_MASK_CAN_INTERRUPT) {
 			// do something
 			noRTOS_CAN_RX_IRQ();
-			clear_bit_in_byte(BIT_MASK_CAN_INTERRUPT, &noRTOS_interrupt_flag);
+			clear_bit_in_byte(eBIT_MASK_CAN_INTERRUPT, &noRTOS_interrupt_flag);
 		}
 	}
 }

@@ -13,20 +13,27 @@
 #define NORTOS_SCHEDULAR_GET_TICK()	GET_TICK() // returns tick in milliseconds
 #define NORTOS_NO_OF_MAX_TASK		128
 
+/* definition of general function pointer */
 typedef void(*VoidFunctionPointer)(void);
 
-#define BIT_MASK_RESET_ALL		0b00000000 /* 0 */
-#define BIT_MASK_DI_INTERRUPT	0b00000001 /* 1 */
-#define BIT_MASK_UART_INTERRUPT	0b00000010 /* 2 */
-#define BIT_MASK_CAN_INTERRUPT	0b00000100 /* 3 */
-#define BIT_MASK_RESERVED1		0b00001000 /* 4 */
-#define BIT_MASK_RESERVED2		0b00010000 /* 5 */
-#define BIT_MASK_RESERVED3		0b00100000 /* 6 */
-#define BIT_MASK_RESERVED4		0b01000000 /* 7 */
-#define BIT_MASK_RESERVED5		0b10000000 /* 8 */
+/* definition of interrupt mask
+ * typedef enum does NOT cost Flash or RAM compared to #define. enums for clarity and correctness, not macros.
+ * */
 
-void noRTOS_set_interrupt_received_flag(uint8_t event_type);
-bool noRTOS_wait_for_eventX(			uint8_t event_type);
+typedef enum{
+	eBIT_MASK_RESET_ALL 		= 0b00000000,
+	eBIT_MASK_DI_INTERRUPT 		= 0b00000001,
+	eBIT_MASK_UART_INTERRUPT 	= 0b00000010,
+	eBIT_MASK_CAN_INTERRUPT 	= 0b00000100,
+	eBIT_MASK_RESERVED1 		= 0b00001000,
+	eBIT_MASK_RESERVED2 		= 0b00010000,
+	eBIT_MASK_RESERVED3 		= 0b00100000,
+	eBIT_MASK_RESERVED4 		= 0b01000000,
+	eBIT_MASK_RESERVED5 		= 0b10000000,
+} interrupt_bit_mask;
+
+void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type);
+bool noRTOS_wait_for_eventX(			interrupt_bit_mask event_type);
 
 typedef enum {
 	eNORTOS_PERIODE_1ms 	= 1,

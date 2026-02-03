@@ -203,14 +203,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 /* *************** STM32 HAL Based UART Bridge with RX-line interrupt *************** */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
-		noRTOS_set_interrupt_received_flag(BIT_MASK_UART_INTERRUPT);
+		noRTOS_set_interrupt_received_flag(eBIT_MASK_UART_INTERRUPT);
 	}
 }
 
 /* *************** STM32 HAL Based digital input interrupt *************** */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == B1_Pin){
-		noRTOS_set_interrupt_received_flag(BIT_MASK_DI_INTERRUPT);
+		noRTOS_set_interrupt_received_flag(eBIT_MASK_DI_INTERRUPT);
 	}
 }
 
