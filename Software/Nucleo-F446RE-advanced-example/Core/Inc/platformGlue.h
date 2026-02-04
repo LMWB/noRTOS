@@ -6,7 +6,7 @@
 #define PLATFORM_HAS_UART
 //#define PLATFORM_HAS_TIMER
 //#define PLATFORM_HAS_I2C
-//#define PLATFORM_HAS_SPI
+#define PLATFORM_HAS_SPI
 //#define PLATFORM_HAS_WATCHDOG
 //#define PLATFORM_HAS_CAN
 //#define PLATFORM_HAS_RTC
@@ -36,9 +36,9 @@
 #define NUCLEO_LED_toggle()			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
 
 // green
-#define LED_GREEN_ON() 			HAL_GPIO_WritePin(	USER_LED1_GPIO_Port, USER_LED1_Pin, GPIO_PIN_SET)
-#define LED_GREEN_OFF()			HAL_GPIO_WritePin(	USER_LED1_GPIO_Port, USER_LED1_Pin, GPIO_PIN_RESET)
-#define LED_GREEN_TOGGLE()		HAL_GPIO_TogglePin(	USER_LED1_GPIO_Port, USER_LED1_Pin)
+#define LED_GREEN_ON() 			HAL_GPIO_WritePin(	LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET)
+#define LED_GREEN_OFF()			HAL_GPIO_WritePin(	LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET)
+#define LED_GREEN_TOGGLE()		HAL_GPIO_TogglePin(	LED1_GPIO_Port, LED1_Pin)
 
 // red
 #define LED_RED_ON() 			HAL_GPIO_WritePin(	USER_LED2_GPIO_Port, USER_LED2_Pin, GPIO_PIN_SET)
@@ -76,6 +76,10 @@
 
 #endif
 /* *** SPI ********************************************************************************/
+#include "spi.h"
+#define SPI_HANDLER 	            				hspi1
+#define SPI_INSTANCE 	            				SPI1
+#define SPI_SEND_RECEIVE(pTXData, pRXData, length)	HAL_SPI_TransmitReceive(&SPI_HANDLER, pTXData, pRXData, length, HAL_MAX_DELAY);
 #ifdef PLATFORM_HAS_SPI
 
 #endif

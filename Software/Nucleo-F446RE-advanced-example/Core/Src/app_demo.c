@@ -48,7 +48,7 @@ void noRTOS_ADC_IRQ(void){
 /* -------- Synchronous Tasks ----------------- */
 
 void blink_LED(void) {
-	NUCLEO_LED_toggle();
+	LED_GREEN_TOGGLE();
 }
 
 uint8_t read_gpio(uint8_t slot) {
