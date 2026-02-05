@@ -40,20 +40,8 @@
 #define LED_GREEN_OFF()			HAL_GPIO_WritePin(	LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET)
 #define LED_GREEN_TOGGLE()		HAL_GPIO_TogglePin(	LED1_GPIO_Port, LED1_Pin)
 
-// red
-#define LED_RED_ON() 			HAL_GPIO_WritePin(	USER_LED2_GPIO_Port, USER_LED2_Pin, GPIO_PIN_SET)
-#define LED_RED_OFF()			HAL_GPIO_WritePin(	USER_LED2_GPIO_Port, USER_LED2_Pin, GPIO_PIN_RESET)
-#define LED_RED_TOGGLE()		HAL_GPIO_TogglePin(	USER_LED2_GPIO_Port, USER_LED2_Pin)
-
-// green it has no yellow
-#define LED_YELLOW_ON()			HAL_GPIO_WritePin(	USER_LED3_GPIO_Port, USER_LED3_Pin, GPIO_PIN_SET)
-#define LED_YELLOW_OFF()		HAL_GPIO_WritePin(  USER_LED3_GPIO_Port, USER_LED3_Pin, GPIO_PIN_RESET)
-#define LED_YELLOW_TOGGLE()		HAL_GPIO_TogglePin(	USER_LED3_GPIO_Port, USER_LED3_Pin)
-
-// red as well
-#define LED4_ON() 				HAL_GPIO_WritePin(	USER_LED4_GPIO_Port, USER_LED4_Pin, GPIO_PIN_SET)
-#define LED4_OFF() 				HAL_GPIO_WritePin(  USER_LED4_GPIO_Port, USER_LED4_Pin, GPIO_PIN_RESET)
-#define LED4_TOGGLE()			HAL_GPIO_TogglePin( USER_LED4_GPIO_Port, USER_LED4_Pin)
+#define SPI_CS_HIGH()			HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_SET)
+#define SPI_CS_LOW()			HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_RESET);
 
 #define TOGGLE_PIN(PORT, PIN)		HAL_GPIO_TogglePin(PORT, PIN)			/* void HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) */
 #define WRITE_PIN(PORT, PIN, STATE)	HAL_GPIO_WritePin(PORT, PIN, STATE); 	/* void HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) */
@@ -76,12 +64,11 @@
 
 #endif
 /* *** SPI ********************************************************************************/
+#ifdef PLATFORM_HAS_SPI
 #include "spi.h"
 #define SPI_HANDLER 	            				hspi1
 #define SPI_INSTANCE 	            				SPI1
 #define SPI_SEND_RECEIVE(pTXData, pRXData, length)	HAL_SPI_TransmitReceive(&SPI_HANDLER, pTXData, pRXData, length, HAL_MAX_DELAY);
-#ifdef PLATFORM_HAS_SPI
-
 #endif
 /* *** Hardware Timer *********************************************************************/
 #ifdef PLATFORM_HAS_TIMER

@@ -6,7 +6,7 @@
 //#define PLATFORM_HAS_UART
 //#define PLATFORM_HAS_TIMER
 //#define PLATFORM_HAS_I2C
-//#define PLATFORM_HAS_SPI
+#define PLATFORM_HAS_SPI
 //#define PLATFORM_HAS_WATCHDOG
 //#define PLATFORM_HAS_CAN
 //#define PLATFORM_HAS_RTC
@@ -29,33 +29,15 @@
 #define DEVICE_TIMEOUT                  HAL_TIMEOUT
 
 /* *** GPIO *************************************************************************** */
-#define SW_NUCLEO   				B1_Pin
-#define NUCLEO_BUTTON_READ()		HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)
+#define SW_NUCLEO   			B1_Pin
+#define NUCLEO_BUTTON_READ()	HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)
 
-#define NUCLEO_LED_turn_on()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1)
-#define NUCLEO_LED_turn_off()		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0)
-#define NUCLEO_LED_toggle()			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
+#define NUCLEO_LED_turn_on()	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1)
+#define NUCLEO_LED_turn_off()	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0)
+#define NUCLEO_LED_toggle()		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
 
-// green
-#define LED_GREEN_ON() 			HAL_GPIO_WritePin(	USER_LED1_GPIO_Port, USER_LED1_Pin, GPIO_PIN_SET)
-#define LED_GREEN_OFF()			HAL_GPIO_WritePin(	USER_LED1_GPIO_Port, USER_LED1_Pin, GPIO_PIN_RESET)
-#define LED_GREEN_TOGGLE()		HAL_GPIO_TogglePin(	USER_LED1_GPIO_Port, USER_LED1_Pin)
-
-// red
-#define LED_RED_ON() 			HAL_GPIO_WritePin(	USER_LED2_GPIO_Port, USER_LED2_Pin, GPIO_PIN_SET)
-#define LED_RED_OFF()			HAL_GPIO_WritePin(	USER_LED2_GPIO_Port, USER_LED2_Pin, GPIO_PIN_RESET)
-#define LED_RED_TOGGLE()		HAL_GPIO_TogglePin(	USER_LED2_GPIO_Port, USER_LED2_Pin)
-
-// green it has no yellow
-#define LED_YELLOW_ON()			HAL_GPIO_WritePin(	USER_LED3_GPIO_Port, USER_LED3_Pin, GPIO_PIN_SET)
-#define LED_YELLOW_OFF()		HAL_GPIO_WritePin(  USER_LED3_GPIO_Port, USER_LED3_Pin, GPIO_PIN_RESET)
-#define LED_YELLOW_TOGGLE()		HAL_GPIO_TogglePin(	USER_LED3_GPIO_Port, USER_LED3_Pin)
-
-// red as well
-#define LED4_ON() 				HAL_GPIO_WritePin(	USER_LED4_GPIO_Port, USER_LED4_Pin, GPIO_PIN_SET)
-#define LED4_OFF() 				HAL_GPIO_WritePin(  USER_LED4_GPIO_Port, USER_LED4_Pin, GPIO_PIN_RESET)
-#define LED4_TOGGLE()			HAL_GPIO_TogglePin( USER_LED4_GPIO_Port, USER_LED4_Pin)
-
+#define SPI_CS_HIGH()			HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_SET)
+#define SPI_CS_LOW()			HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_RESET);
 
 /* *** UART *************************************************************************** */
 #define UART_TERMINAL_HANDLER 	            		huart2
@@ -77,6 +59,12 @@
 /* *** I2C ********************************************************************************/
 
 /* *** SPI ********************************************************************************/
+#ifdef PLATFORM_HAS_SPI
+#include "spi.h"
+#define SPI_HANDLER 	            				hspi1
+#define SPI_INSTANCE 	            				SPI1
+#define SPI_SEND_RECEIVE(pTXData, pRXData, length)	HAL_SPI_TransmitReceive(&SPI_HANDLER, pTXData, pRXData, length, HAL_MAX_DELAY);
+#endif
 
 /* *** Hardware Timer *********************************************************************/
 

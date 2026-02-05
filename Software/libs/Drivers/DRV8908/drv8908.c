@@ -1,5 +1,5 @@
 #include "drv8908.h"
-#include "spi.h"
+#include "platformGlue.h"
 
 
 /* Register addresses */
@@ -21,8 +21,6 @@
 #define OLD_CTRL_6 		0x24
 
 /* --- low-level helpers --- */
-static void drv_cs_low(void)  { HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_RESET); }
-static void drv_cs_high(void) { HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_SET); }
 
 /* Transfer a single 16-bit word (MSB first). Returns the 16-bit response.
  * SPI Full-Duplex-Master, Motorola MSB first, 8Bit, CPOL->Low, CPHA->2Edge
@@ -35,9 +33,9 @@ static uint16_t drv_spi_xfer(uint16_t word)
     tx[1] = (uint8_t)(word & 0xFF);
     rx[0] = rx[1] = 0;
 
-    drv_cs_low();
-    HAL_SPI_TransmitReceive(&hspi1, tx, rx, 2, HAL_MAX_DELAY);
-    drv_cs_high();
+    SPI_CS_LOW();
+    SPI_SEND_RECEIVE(tx, rx, 2);
+    SPI_CS_HIGH();
 
     return (uint16_t)((rx[0] << 8) | rx[1]);
 }

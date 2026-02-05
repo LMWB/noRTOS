@@ -46,7 +46,6 @@ void noRTOS_ADC_IRQ(void){
 }
 
 /* -------- Synchronous Tasks ----------------- */
-
 void blink_LED(void) {
 	LED_GREEN_TOGGLE();
 }
@@ -100,9 +99,7 @@ void process_analog_readings(void){
 		/* finally restart adc sampling */
 		ADC_START_DMA(&gADC_raw_data);
 	}
-
 }
-
 
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
