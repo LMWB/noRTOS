@@ -113,48 +113,7 @@ void drv8908_state_machine(void) {
 		z = 0;
 	}
 
-	if (z == 0x00) {
-		DRV8908_SetOutput(0, 0);
-		DRV8908_SetOutput(1, 0);
-		DRV8908_SetOutput(2, 0);
-		DRV8908_SetOutput(3, 0);
-		DRV8908_SetOutput(4, 0);
-		DRV8908_SetOutput(5, 0);
-		DRV8908_SetOutput(6, 0);
-		DRV8908_SetOutput(7, 0);
-	}
-
-	if (z == 0x01) {
-		DRV8908_SetOutput(0, 1);
-	}
-
-	if (z == 0x03) {
-		DRV8908_SetOutput(1, 1);
-	}
-
-	if (z == 0x07) {
-		DRV8908_SetOutput(2, 1);
-	}
-
-	if (z == 0x0F){
-		DRV8908_SetOutput(3, 1);
-	}
-
-	if (z == 0x1F) {
-		DRV8908_SetOutput(4, 1);
-	}
-
-	if (z == 0x3F){
-		DRV8908_SetOutput(5, 1);
-	}
-
-	if (z == 0x7F) {
-		DRV8908_SetOutput(6, 1);
-	}
-
-	if (z == 0xFF) {
-		DRV8908_SetOutput(7, 1);
-	}
+	DRV8908_write_bulk_output_register(z);
 
 	// adding zeros from right (LSB)
 	z = z << 1;

@@ -97,33 +97,65 @@ void drv8908_Init(void)
  * write 8Bits at same time
  * channel: 0..7  (0 => HB1, 7 => HB8)
  * state: 0 => drive LOW (enable LS), 1 => drive HIGH (enable HS)
+ * Operation Control 1 (OP_CTRL_1) Register (Address = 0x08) [reset = 0x00]
+ * HB4_HS_EN	HB4_LS_EN 	HB3_HS_EN	HB3_LS_EN	HB2_HS_EN	HB2_LS_EN	HB1_HS_EN	HB1_LS_EN
+ *
+ * Operation Control 2 (OP_CTRL_2) Register (Address = 0x09) [reset = 0x00]
+ * HB8_HS_EN	HB8_LS_EN	HB7_HS_EN	HB7_LS_EN	HB6_HS_EN	HB6_LS_EN	HB5_HS_EN	HB5_LS_EN
+ * Example
+ * all output low
+ * OP_CTRL_1 = 0b01010101 & OP_CTRL_2 = 0b01010101
+ *
+ * output 0 and 7 high
+ * OP_CTRL_1 = 0b01010110 & OP_CTRL_2 = 0b10010101
+ *
+ *
  * */
-void DRV8908_Set_Bulk_Output(uint8_t state) {
-	uint8_t regAddr;
-	uint8_t idx;
-	uint8_t bitLS, bitHS;
-	uint8_t regVal;
+void DRV8908_write_bulk_output_register(uint8_t state) {
+	uint8_t regVal1 = 0b01010101; // all half bridges to low side enable as default
+	uint8_t regVal2 = 0b01010101;
+	uint8_t s = state;
 
-	if (channel > 7U) {
-		return;
+	// set low nibble half bridges according to LSB state-nibble
+	for (uint_fast8_t i = 0; i < 4; i++) {
+		if (s & (1U << i)) {
+			// set the HS bit
+			regVal1 |= 1 << (2 * i + 1);
+			// clear the LS bit
+			regVal1 &= ~(1 << 2 * i);
+		}
 	}
 
-	if (channel < 4U) {
-		regAddr = REG_OP_CTRL_1;
-		idx = channel;
-	} else {
-		regAddr = REG_OP_CTRL_2;
-		idx = (uint8_t) (channel - 4U);
+	// write register to drv8908
+	drv_write_reg(REG_OP_CTRL_1, regVal1);
+
+	// Divide the 'state' register in 4 Bit low nibble and 4 bit high nibble
+	s = s >> 4;
+
+	// set high nibble half bridges according to MSB state-nibble
+	for (uint_fast8_t i = 0; i < 4; i++) {
+		if (s & (1U << i)) {
+			// set the HS bit
+			regVal2 |= 1 << (2 * i + 1);
+			// clear the LS bit
+			regVal2 &= ~(1 << 2 * i);
+		}
 	}
 
-	drv_write_reg(regAddr, regVal);
+	// write register to drv8908
+	drv_write_reg(REG_OP_CTRL_2, regVal2);
+
+	// option read back status register
+	regVal1 = drv_read_reg(REG_OP_CTRL_2);
+	regVal1 = drv_read_reg(REG_OP_CTRL_2);
+
 }
 
 /* Write 1Bit and while preserve the other 7 Bits
  * channel: 0..7  (0 => HB1, 7 => HB8)
  * state: 0 => drive LOW (enable LS), 1 => drive HIGH (enable HS)
 */
-void DRV8908_SetOutput(uint8_t channel, uint8_t state)
+void DRV8908_set_output(uint8_t channel, uint8_t state)
 {
     uint8_t regAddr;
     uint8_t idx;
@@ -162,37 +194,37 @@ void DRV8908_SetOutput(uint8_t channel, uint8_t state)
 }
 
 void drv8908_demo(void){
-	DRV8908_SetOutput(0, 1);
+	DRV8908_set_output(0, 1);
 	HAL_Delay(500);
-	DRV8908_SetOutput(1, 1);
+	DRV8908_set_output(1, 1);
 	HAL_Delay(500);
-	DRV8908_SetOutput(2, 1);
+	DRV8908_set_output(2, 1);
 	HAL_Delay(500);
-	DRV8908_SetOutput(3, 1);
+	DRV8908_set_output(3, 1);
 	HAL_Delay(500);
-	DRV8908_SetOutput(4, 1);
+	DRV8908_set_output(4, 1);
 	HAL_Delay(500);
-	DRV8908_SetOutput(5, 1);
+	DRV8908_set_output(5, 1);
 	HAL_Delay(500);
-	DRV8908_SetOutput(6, 1);
+	DRV8908_set_output(6, 1);
 	HAL_Delay(500);
-	DRV8908_SetOutput(7, 1);
+	DRV8908_set_output(7, 1);
 	HAL_Delay(500);
 
-	DRV8908_SetOutput(0, 0);
+	DRV8908_set_output(0, 0);
 	HAL_Delay(500);
-	DRV8908_SetOutput(1, 0);
+	DRV8908_set_output(1, 0);
 	HAL_Delay(500);
-	DRV8908_SetOutput(2, 0);
+	DRV8908_set_output(2, 0);
 	HAL_Delay(500);
-	DRV8908_SetOutput(3, 0);
+	DRV8908_set_output(3, 0);
 	HAL_Delay(500);
-	DRV8908_SetOutput(4, 0);
+	DRV8908_set_output(4, 0);
 	HAL_Delay(500);
-	DRV8908_SetOutput(5, 0);
+	DRV8908_set_output(5, 0);
 	HAL_Delay(500);
-	DRV8908_SetOutput(6, 0);
+	DRV8908_set_output(6, 0);
 	HAL_Delay(500);
-	DRV8908_SetOutput(7, 0);
+	DRV8908_set_output(7, 0);
 	HAL_Delay(500);
 }
