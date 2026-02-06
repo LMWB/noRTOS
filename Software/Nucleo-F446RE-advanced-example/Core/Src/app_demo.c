@@ -3,6 +3,8 @@
 #include "app_demo.h"
 #include "platformGlue.h"
 #include "noRTOS.h"
+#include "Drivers/DRV8908/drv8908.h"
+
 #include <stdio.h>
 
 static uint32_t gButton_states = 0x80000000;
@@ -18,6 +20,8 @@ void noRTOS_setup(void) {
 	printf("STM32 UUID (int): %ld-%ld-%ld \r\n", cpu_id.uid[0], cpu_id.uid[1], cpu_id.uid[2]);
 	printf("STM32 UUID (hex): 0x%08lX-0x%08lX-0x%08lX \r\n", cpu_id.uid[0], cpu_id.uid[1], cpu_id.uid[2]);
 	printf("\r\n");
+
+	drv8908_Init();
 
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 	ADC_START_DMA(&gADC_raw_data);
@@ -101,6 +105,62 @@ void process_analog_readings(void){
 	}
 }
 
+void drv8908_state_machine(void) {
+	static uint16_t z = 0;
+
+	if (z == 0x1FF) {
+		// if 8 bits full clear to 0
+		z = 0;
+	}
+
+	if (z == 0x00) {
+		DRV8908_SetOutput(0, 0);
+		DRV8908_SetOutput(1, 0);
+		DRV8908_SetOutput(2, 0);
+		DRV8908_SetOutput(3, 0);
+		DRV8908_SetOutput(4, 0);
+		DRV8908_SetOutput(5, 0);
+		DRV8908_SetOutput(6, 0);
+		DRV8908_SetOutput(7, 0);
+	}
+
+	if (z == 0x01) {
+		DRV8908_SetOutput(0, 1);
+	}
+
+	if (z == 0x03) {
+		DRV8908_SetOutput(1, 1);
+	}
+
+	if (z == 0x07) {
+		DRV8908_SetOutput(2, 1);
+	}
+
+	if (z == 0x0F){
+		DRV8908_SetOutput(3, 1);
+	}
+
+	if (z == 0x1F) {
+		DRV8908_SetOutput(4, 1);
+	}
+
+	if (z == 0x3F){
+		DRV8908_SetOutput(5, 1);
+	}
+
+	if (z == 0x7F) {
+		DRV8908_SetOutput(6, 1);
+	}
+
+	if (z == 0xFF) {
+		DRV8908_SetOutput(7, 1);
+	}
+
+	// adding zeros from right (LSB)
+	z = z << 1;
+	z = z | 1;
+}
+
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
@@ -110,6 +170,9 @@ void app_demo_main(void){
 
 	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_500ms, .task_callback = process_analog_readings };
 	noRTOS_add_task_to_scheduler(&analog);
+
+	noRTOS_task_t snake = { .delay = eNORTOS_PERIODE_500ms, .task_callback = drv8908_state_machine };
+	noRTOS_add_task_to_scheduler(&snake);
 
 	noRTOS_run_scheduler();
 }

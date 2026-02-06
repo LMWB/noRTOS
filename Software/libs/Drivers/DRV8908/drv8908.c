@@ -93,8 +93,35 @@ void drv8908_Init(void)
 
 }
 
-/* channel: 0..7  (0 => HB1, 7 => HB8)
-   state: 0 => drive LOW (enable LS), 1 => drive HIGH (enable HS)
+/*
+ * write 8Bits at same time
+ * channel: 0..7  (0 => HB1, 7 => HB8)
+ * state: 0 => drive LOW (enable LS), 1 => drive HIGH (enable HS)
+ * */
+void DRV8908_Set_Bulk_Output(uint8_t state) {
+	uint8_t regAddr;
+	uint8_t idx;
+	uint8_t bitLS, bitHS;
+	uint8_t regVal;
+
+	if (channel > 7U) {
+		return;
+	}
+
+	if (channel < 4U) {
+		regAddr = REG_OP_CTRL_1;
+		idx = channel;
+	} else {
+		regAddr = REG_OP_CTRL_2;
+		idx = (uint8_t) (channel - 4U);
+	}
+
+	drv_write_reg(regAddr, regVal);
+}
+
+/* Write 1Bit and while preserve the other 7 Bits
+ * channel: 0..7  (0 => HB1, 7 => HB8)
+ * state: 0 => drive LOW (enable LS), 1 => drive HIGH (enable HS)
 */
 void DRV8908_SetOutput(uint8_t channel, uint8_t state)
 {
