@@ -73,7 +73,7 @@ void scan_i2c_sensors(void) {
 
 	DEVICE_STATUS_DEFINITION res;
 	for (uint16_t i = 0; i < 128; i++) {
-		res = IS_I2C_DEVICE_READY(i << 1);
+		res = I2C_IS_DEVICE_READY(i << 1);
 		if( i%32 == 0){
 			myprintf("\n");
 		}

@@ -5,7 +5,7 @@
 
 #define PLATFORM_HAS_UART
 //#define PLATFORM_HAS_TIMER
-//#define PLATFORM_HAS_I2C
+#define PLATFORM_HAS_I2C
 #define PLATFORM_HAS_SPI
 //#define PLATFORM_HAS_WATCHDOG
 //#define PLATFORM_HAS_CAN
@@ -36,12 +36,12 @@
 #define NUCLEO_LED_toggle()			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin)
 
 // green
-#define LED_GREEN_ON() 			HAL_GPIO_WritePin(	LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET)
-#define LED_GREEN_OFF()			HAL_GPIO_WritePin(	LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET)
-#define LED_GREEN_TOGGLE()		HAL_GPIO_TogglePin(	LED1_GPIO_Port, LED1_Pin)
+#define LED_GREEN_ON() 				HAL_GPIO_WritePin(	LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET)
+#define LED_GREEN_OFF()				HAL_GPIO_WritePin(	LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET)
+#define LED_GREEN_TOGGLE()			HAL_GPIO_TogglePin(	LED1_GPIO_Port, LED1_Pin)
 
-#define SPI_CS_HIGH()			HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_SET)
-#define SPI_CS_LOW()			HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_RESET);
+#define SPI_CS_HIGH()				HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_SET)
+#define SPI_CS_LOW()				HAL_GPIO_WritePin(SPI1_nCS_GPIO_Port, SPI1_nCS_Pin, GPIO_PIN_RESET);
 
 #define TOGGLE_PIN(PORT, PIN)		HAL_GPIO_TogglePin(PORT, PIN)			/* void HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) */
 #define WRITE_PIN(PORT, PIN, STATE)	HAL_GPIO_WritePin(PORT, PIN, STATE); 	/* void HAL_GPIO_WritePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) */
@@ -50,9 +50,9 @@
 /* *** UART *************************************************************************** */
 #ifdef PLATFORM_HAS_UART
 #include "usart.h"
-#define UART_TERMINAL_HANDLER 	            		huart2
-#define UART_TERMINAL_INSTANCE 	            		USART2
-#define UART_TERMINAL_SEND(string, size)    		HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
+#define UART_TERMINAL_HANDLER 	            			huart2
+#define UART_TERMINAL_INSTANCE 	            			USART2
+#define UART_TERMINAL_SEND(string, size)    			HAL_UART_Transmit(&UART_TERMINAL_HANDLER, string, size, HAL_MAX_DELAY)
 
 #define UART_TERMINAL_READ_BYTE_IRQ(buffer)				HAL_UART_Receive_IT(&UART_TERMINAL_HANDLER, buffer, 1)
 #define UART_TERMINAL_READ_LINE_IRQ(buffer, size)		HAL_UARTEx_ReceiveToIdle_IT(&UART_TERMINAL_HANDLER, buffer, size)
@@ -61,6 +61,11 @@
 
 /* *** I2C ********************************************************************************/
 #ifdef PLATFORM_HAS_I2C
+#include "i2c.h"
+#define I2C_HANDLER 				        							hi2c1
+#define I2C_INSTANCE				        							I2C1
+#define I2C_IS_DEVICE_READY(dev_address)    							HAL_I2C_IsDeviceReady(&I2C_HANDLER, dev_address, 1, 100)
+#define I2C_READ_MEMORY(dev_address, mem_address, pRead_buffer, length) HAL_I2C_Mem_Read(&I2C_HANDLER, dev_address, mem_address, I2C_MEMADD_SIZE_8BIT, pRead_buffer, length, 100)
 
 #endif
 /* *** SPI ********************************************************************************/

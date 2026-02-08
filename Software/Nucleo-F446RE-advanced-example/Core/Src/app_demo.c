@@ -4,11 +4,13 @@
 #include "platformGlue.h"
 #include "noRTOS.h"
 #include "Drivers/DRV8908/drv8908.h"
+#include "Drivers/SE95/se95.h"
 
 #include <stdio.h>
 
 static uint32_t gButton_states = 0x80000000;
 static uint16_t gADC_raw_data[ADC_NO_OF_CHANNELS];
+static int16_t gTemperature = 0;
 
 /* override */
 void noRTOS_setup(void) {
@@ -120,6 +122,26 @@ void drv8908_state_machine(void) {
 	z = z | 1;
 }
 
+void se95_state_machine(void){
+	static uint8_t z = 0;
+	switch (z) {
+		case 0:
+			if(SE95_Init() == DEVICE_OK){
+				z = 1;
+			}
+			break;
+		case 1:
+			gTemperature = SE95_ReadTemperature();
+			if(gTemperature == SE95_ERROR_CODE){
+				z = 0;
+			}
+			break;
+		default:
+			z = 0;
+			break;
+	}
+}
+
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
@@ -132,6 +154,9 @@ void app_demo_main(void){
 
 	noRTOS_task_t snake = { .delay = eNORTOS_PERIODE_500ms, .task_callback = drv8908_state_machine };
 	noRTOS_add_task_to_scheduler(&snake);
+
+	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = se95_state_machine };
+	noRTOS_add_task_to_scheduler(&temperature);
 
 	noRTOS_run_scheduler();
 }
