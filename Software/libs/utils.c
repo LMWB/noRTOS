@@ -208,7 +208,27 @@ uint8_t set_gmtime_stm32(struct tm *time) {
 }
 #endif
 
+// helper to start stop cpu cycle counter
+void DWT_Init(void) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // activate Trace
+    DWT->CYCCNT = 0;                                // reset counter
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            // start counter
+}
 
+// example code
+//void check_performance(void ) {
+//    uint32_t start, end, total;
+//
+//    start = DWT->CYCCNT;
+//
+//    // some heavy calculation
+//    __NOP();
+//
+//    end = DWT->CYCCNT;
+//    total = end - start;
+//
+//    // 'total' enthält nun die exakte Anzahl der CPU-Zyklen
+//}
 
 
 

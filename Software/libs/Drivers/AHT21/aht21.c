@@ -10,7 +10,8 @@ HAL_StatusTypeDef AHT21_Init(I2C_HandleTypeDef *hi2c) {
     HAL_Delay(40); // Einschaltverzögerung laut Datenblatt
 
     // Kalibrierungsbefehl senden
-    return HAL_I2C_Master_Transmit(hi2c, AHT21_I2C_ADDR, check_cmd, 3, 100);
+    //return HAL_I2C_Master_Transmit(hi2c, AHT21_I2C_ADDR, check_cmd, 3, 100);
+    return HAL_OK;
 }
 
 HAL_StatusTypeDef AHT21_ReadData(I2C_HandleTypeDef *hi2c, int16_t *temp_x10, int16_t *hum_x10) {
@@ -20,8 +21,8 @@ HAL_StatusTypeDef AHT21_ReadData(I2C_HandleTypeDef *hi2c, int16_t *temp_x10, int
     // 1. Messung triggern
     if (HAL_I2C_Master_Transmit(hi2c, AHT21_I2C_ADDR, trigger_cmd, 3, 100) != HAL_OK) return HAL_ERROR;
 
-    // 2. Warten (Messung dauert ca. 80ms)
-    HAL_Delay(80);
+    // 2. Warten (Messung dauert ca. 250ms)
+    HAL_Delay(250);
 
     // 3. 6 Bytes lesen (Status + 20-Bit Hum + 20-Bit Temp)
     if (HAL_I2C_Master_Receive(hi2c, AHT21_I2C_ADDR, data, 6, 100) != HAL_OK) return HAL_ERROR;

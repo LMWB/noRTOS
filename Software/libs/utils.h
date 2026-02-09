@@ -15,6 +15,9 @@
 /* *************** Alternative to standard printf() which not need the "\n" terminator ******** */
 void myprintf(const char *fmt, ...);
 
+
+
+// todo: is this still in use?
 /* *************** UART Interrupt Receiver *************** */
 #define UART_BUFFER_SIZE 128
 extern uint8_t 	uart2_buffer[UART_BUFFER_SIZE];

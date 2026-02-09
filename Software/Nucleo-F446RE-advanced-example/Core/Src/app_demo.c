@@ -3,14 +3,22 @@
 #include "app_demo.h"
 #include "platformGlue.h"
 #include "noRTOS.h"
+#include "utils.h"
+#include "dsp.h"
 #include "Drivers/DRV8908/drv8908.h"
 #include "Drivers/SE95/se95.h"
 
 #include <stdio.h>
 
+static uint32_t gTotal_CPU_Ticks = 0;
 static uint32_t gButton_states = 0x80000000;
 static uint16_t gADC_raw_data[ADC_NO_OF_CHANNELS];
 static int16_t gTemperature = 0;
+
+static IIR_State filter1;
+static IIR_State filter2;
+static IIR_State filter3;
+static IIR_State filter4;
 
 /* override */
 void noRTOS_setup(void) {
@@ -27,6 +35,13 @@ void noRTOS_setup(void) {
 
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
 	ADC_START_DMA(&gADC_raw_data);
+
+	IIR_Low_Pass_init(filter1);
+	IIR_Low_Pass_init(filter2);
+	IIR_Low_Pass_init(filter3);
+	IIR_Low_Pass_init(filter4);
+
+	DWT_Init();
 }
 
 void uart_loop_back(char* buf){
@@ -85,6 +100,7 @@ uint8_t read_gpio(uint8_t slot) {
 /* this is a kind of software interrupt */
 void read_button_states(void){
 	uint32_t button_states = 0;
+
 	for (uint_fast8_t i = 0;  i < 4; ++ i) {
 		button_states |= read_gpio(i) << i;
 	}
@@ -103,13 +119,20 @@ void read_button_states(void){
 }
 
 void process_analog_readings(void){
+	uint32_t end;
+	uint32_t start = GET_CPU_TICKS();
 	if( noRTOS_wait_for_event(eBIT_MASK_ADC_INTERRUPT) ){
 		/* do stuff like digital filtering etc. */
-		__NOP();
+		IIR_Low_Pass_update(&filter1, gADC_raw_data[0]);
+		IIR_Low_Pass_update(&filter2, gADC_raw_data[1]);
+		IIR_Low_Pass_update(&filter3, gADC_raw_data[2]);
+		IIR_Low_Pass_update(&filter4, gADC_raw_data[3]);
 
 		/* finally restart adc sampling */
 		ADC_START_DMA(&gADC_raw_data);
 	}
+	end = GET_CPU_TICKS();
+	gTotal_CPU_Ticks = end - start;
 }
 
 void drv8908_state_machine(void) {
@@ -151,7 +174,7 @@ void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
 
-	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_200ms, .task_callback = process_analog_readings };
+	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_100ms, .task_callback = process_analog_readings };
 	noRTOS_add_task_to_scheduler(&analog);
 
 	noRTOS_task_t blinky = { .delay = eNORTOS_PERIODE_500ms, .task_callback = blink_LED };
