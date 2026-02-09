@@ -29,11 +29,16 @@ void noRTOS_setup(void) {
 	ADC_START_DMA(&gADC_raw_data);
 }
 
+void uart_loop_back(char* buf){
+	printf("loopback %s", buf);
+}
+
 /* -------- Asynchronous Tasks ----------------- */
 /* override */
 void noRTOS_UART_RX_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 	printf("received UART interrupt\n");
+	uart_loop_back((char*)uart2_buffer);
 
 	/* now since the IRQ callback has been executed, we can restart the IRQ trigger */
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
@@ -146,11 +151,11 @@ void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
 
+	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_200ms, .task_callback = process_analog_readings };
+	noRTOS_add_task_to_scheduler(&analog);
+
 	noRTOS_task_t blinky = { .delay = eNORTOS_PERIODE_500ms, .task_callback = blink_LED };
 	noRTOS_add_task_to_scheduler(&blinky);
-
-	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_500ms, .task_callback = process_analog_readings };
-	noRTOS_add_task_to_scheduler(&analog);
 
 	noRTOS_task_t snake = { .delay = eNORTOS_PERIODE_500ms, .task_callback = drv8908_state_machine };
 	noRTOS_add_task_to_scheduler(&snake);
@@ -172,6 +177,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 /* *************** STM32 HAL Based UART Bridge with RX-line interrupt *************** */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
+		// add null terminator to overide what was received befor
+		uart2_buffer[Size+1] = '\0';
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_UART_INTERRUPT);
 	}
 }

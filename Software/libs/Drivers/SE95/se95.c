@@ -13,7 +13,7 @@ int16_t SE95_ReadTemperature( ) {
     uint8_t buf[2];
 
     if (I2C_READ_MEMORY(SE95_I2C_ADDR, SE95_REG_TEMP, buf, 2) != DEVICE_OK) {
-        return SE95_ERROR_CODE; // Fehlercode
+        return SE95_ERROR_CODE;
     }
 
     // 13-Bit Rohwert extrahieren (Vorzeichen bleibt durch Cast erhalten)
