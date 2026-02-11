@@ -19,41 +19,6 @@ void myprintf(const char *fmt, ...) {
 	UART_TERMINAL_SEND((uint8_t *) buffer, len);
 }
 
-uint8_t uart2_buffer[UART_BUFFER_SIZE] =  {0};
-static uint16_t rx_size = 0;
-static bool uart2_read_line_complete = false;
-
-bool noRTOS_is_UART2_read_line_complete(void){
-	return uart2_read_line_complete;
-}
-
-void noRTOS_UART2_read_byte_with_interrupt(void){
-	HAL_UART_Receive_IT(&huart2, &uart2_buffer[rx_size], 1);
-}
-
-void noRTOS_UART2_clear_rx_buffer(void){
-	rx_size = 0;
-	uart2_read_line_complete = false;
-	memset(uart2_buffer, 0, UART_BUFFER_SIZE);
-	noRTOS_UART2_read_byte_with_interrupt();
-}
-
-void noRTOS_UART2_echo_whats_been_received(void)
-{
-	UART_TERMINAL_SEND( uart2_buffer, rx_size);
-}
-
-void noRTOS_UART2_receive_byte_callback(void){
-	/* check if read line complete */
-	if(rx_size >= 3 && uart2_buffer[rx_size-1] == '\r' && uart2_buffer[rx_size] == '\n'){
-		rx_size++;
-		uart2_read_line_complete = true;
-	}else{
-		rx_size++;
-		noRTOS_UART2_read_byte_with_interrupt();
-	}
-}
-
 #endif
 
 uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string) {

@@ -7,13 +7,21 @@
 #include "dsp.h"
 #include "Drivers/DRV8908/drv8908.h"
 #include "Drivers/SE95/se95.h"
+#include "Drivers/AHT21/aht21.h"
+#include "Drivers/BME280/bme280.h"
 
 #include <stdio.h>
+
+uint8_t uart2_buffer[UART_BUFFER_SIZE] = {0};
+uint8_t uart4_buffer[UART_BUFFER_SIZE] = {0};
 
 static uint32_t gTotal_CPU_Ticks = 0;
 static uint32_t gButton_states = 0x80000000;
 static uint16_t gADC_raw_data[ADC_NO_OF_CHANNELS];
 static int16_t gTemperature = 0;
+static int16_t gHumidity = 0;
+static uint32_t gPressure = 0;
+static int16_t gAltitude = 0;
 
 static IIR_State filter1;
 static IIR_State filter2;
@@ -34,12 +42,16 @@ void noRTOS_setup(void) {
 	drv8908_Init();
 
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
+
 	ADC_START_DMA(&gADC_raw_data);
 
-	IIR_Low_Pass_init(filter1);
-	IIR_Low_Pass_init(filter2);
-	IIR_Low_Pass_init(filter3);
-	IIR_Low_Pass_init(filter4);
+	IIR_Low_Pass_init(&filter1);
+	IIR_Low_Pass_init(&filter2);
+	IIR_Low_Pass_init(&filter3);
+	IIR_Low_Pass_init(&filter4);
+
+	TIMER_START_PWM_CH1();
+	TIMER_START_PWM_CH2();
 
 	DWT_Init();
 }
@@ -150,23 +162,116 @@ void drv8908_state_machine(void) {
 	z = z | 1;
 }
 
-void se95_state_machine(void){
+void se95_state_machine(void) {
 	static uint8_t z = 0;
 	switch (z) {
-		case 0:
-			if(SE95_Init() == DEVICE_OK){
-				z = 1;
-			}
-			break;
-		case 1:
-			gTemperature = SE95_ReadTemperature();
-			if(gTemperature == SE95_ERROR_CODE){
-				z = 0;
-			}
-			break;
-		default:
+	case 0:
+		if (SE95_Init() == DEVICE_OK) {
+			z = 1;
+		}
+		break;
+	case 1:
+		gTemperature = SE95_ReadTemperature();
+		if (gTemperature == SE95_ERROR_CODE) {
 			z = 0;
-			break;
+		}
+		break;
+	default:
+		z = 0;
+		break;
+	}
+}
+
+void ath21_state_machine(void) {
+	static uint8_t z = 0;
+	switch (z) {
+	case 0:
+		if (AHT21_Init() == DEVICE_OK) {
+			z = 1;
+		}
+		break;
+	case 1:
+		if (AHT21_start_convertion() == DEVICE_OK) {
+			z = 2;
+		} else {
+			z = 0;
+		}
+		break;
+	case 2:
+		if (AHT21_ReadData(&gTemperature, &gHumidity) == DEVICE_OK) {
+			z = 1;
+		} else {
+			z = 0;
+		}
+		break;
+	default:
+		z = 0;
+		break;
+	}
+}
+
+void bme280_state_machine(void) {
+	static uint8_t z = 0;
+	switch (z) {
+	case 0:
+		if (BME280_Init() == DEVICE_OK) {
+			z = 1;
+		}
+		break;
+	case 1:
+		BME280_Read(&gTemperature, &gHumidity, &gPressure);
+
+		// 101325 Pa ist der Standardwert, falls du kein lokales QNH hast
+		gAltitude = BME280_GetAltitudeLinear(gPressure, 100700);
+		break;
+	default:
+		z = 0;
+		break;
+	}
+}
+
+/*
+ *   htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 480-1;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 1024-1;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+ */
+
+void fading_heartbeat(void) {
+	static int8_t counter = 0;
+	static uint8_t direction = 0; /* 0 => up, else => down */
+	/* https://www.mikrocontroller.net/articles/LED-Fading */
+//	const uint16_t pwmtable_8D[32] =
+//	{
+//	    0, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 8, 10, 11, 13, 16, 19, 23,
+//	    27, 32, 38, 45, 54, 64, 76, 91, 108, 128, 152, 181, 215, 255
+//	};
+	const uint16_t pwmtable_10[64] = { 0, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5,
+			5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 19, 21, 23, 26, 29, 32,
+			36, 40, 44, 49, 55, 61, 68, 76, 85, 94, 105, 117, 131, 146, 162,
+			181, 202, 225, 250, 279, 311, 346, 386, 430, 479, 534, 595, 663,
+			739, 824, 918, 1023 };
+
+	//__HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, pwmtable_10[counter]);
+	//TIMER_SET_PWM_DUTY_CYCLE_CH1(pwmtable_10[counter]);
+
+	switch (direction) {
+	case 0: /* counting up */
+		counter++;
+		if (counter >= 64 - 1) {
+			direction = 1;
+		}
+		break;
+	case 1: /* counting down */
+		counter--;
+		if (counter <= 0) {
+			direction = 0;
+		}
+	default:
+		break;
 	}
 }
 
@@ -183,7 +288,7 @@ void app_demo_main(void){
 	noRTOS_task_t snake = { .delay = eNORTOS_PERIODE_500ms, .task_callback = drv8908_state_machine };
 	noRTOS_add_task_to_scheduler(&snake);
 
-	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = se95_state_machine };
+	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = bme280_state_machine };
 	noRTOS_add_task_to_scheduler(&temperature);
 
 	noRTOS_run_scheduler();
@@ -200,7 +305,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 /* *************** STM32 HAL Based UART Bridge with RX-line interrupt *************** */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
-		// add null terminator to overide what was received befor
+		// add null terminator to override what was received before
+		uart2_buffer[Size+1] = '\0';
+		noRTOS_set_interrupt_received_flag(eBIT_MASK_UART_INTERRUPT);
+	}
+
+	if (huart->Instance == UART_RS485_INSTANCE){
+		// add null terminator to override what was received before
 		uart2_buffer[Size+1] = '\0';
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_UART_INTERRUPT);
 	}
@@ -220,3 +331,42 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
 		noRTOS_set_event_received_flag(eBIT_MASK_ADC_INTERRUPT);
 	}
 }
+
+
+// todo: where to move ?
+/* *************** UART Byte Wise Interrupt Receiver *************** */
+
+static uint16_t rx_size = 0;
+static bool uart2_read_line_complete = false;
+
+bool noRTOS_is_UART2_read_line_complete(void){
+	return uart2_read_line_complete;
+}
+
+void noRTOS_UART2_read_byte_with_interrupt(void){
+	HAL_UART_Receive_IT(&huart2, &uart2_buffer[rx_size], 1);
+}
+
+void noRTOS_UART2_clear_rx_buffer(void){
+	rx_size = 0;
+	uart2_read_line_complete = false;
+	memset(uart2_buffer, 0, UART_BUFFER_SIZE);
+	noRTOS_UART2_read_byte_with_interrupt();
+}
+
+void noRTOS_UART2_echo_whats_been_received(void)
+{
+	UART_TERMINAL_SEND( uart2_buffer, rx_size);
+}
+
+void noRTOS_UART2_receive_byte_callback(void){
+	/* check if read line complete */
+	if(rx_size >= 3 && uart2_buffer[rx_size-1] == '\r' && uart2_buffer[rx_size] == '\n'){
+		rx_size++;
+		uart2_read_line_complete = true;
+	}else{
+		rx_size++;
+		noRTOS_UART2_read_byte_with_interrupt();
+	}
+}
+

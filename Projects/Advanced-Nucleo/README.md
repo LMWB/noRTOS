@@ -2,9 +2,9 @@
 Nucleo-F446RE / ARM CortexM4 / 84MHz internal Clock  
 
 This example shows how to use the noRTOS framework with use of multiple peripherals of the STM32F446 microcontroller.
-- GPIO as output (LED Blinky)
-- GPIO as Input (4 pins with internal pull up resistor)
-- ADC with 7 channels
+- GPIO as output (LED Blinky, SPI Chip Select)
+- GPIO as Input (4 pins with internal pull up resistor as push buttons)
+- ADC with 7 channels (1 of them is internal Vref and 1 is internal temperature sensor)
 - UART (as printf target)
 - UART (with ST3485 RS485 transmitter / receiver for use as e.g. Modbus)
 - SPI Master Full Duplex (with TI DRV8908 Full Bridge driver as slave)

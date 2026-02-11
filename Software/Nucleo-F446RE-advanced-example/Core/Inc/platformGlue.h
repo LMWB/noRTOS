@@ -4,7 +4,7 @@
 #define PLATFORM_STM32F446
 
 #define PLATFORM_HAS_UART
-//#define PLATFORM_HAS_TIMER
+#define PLATFORM_HAS_TIMER
 #define PLATFORM_HAS_I2C
 #define PLATFORM_HAS_SPI
 //#define PLATFORM_HAS_WATCHDOG
@@ -58,6 +58,10 @@
 #define UART_TERMINAL_READ_BYTE_IRQ(buffer)				HAL_UART_Receive_IT(&UART_TERMINAL_HANDLER, buffer, 1)
 #define UART_TERMINAL_READ_LINE_IRQ(buffer, size)		HAL_UARTEx_ReceiveToIdle_IT(&UART_TERMINAL_HANDLER, buffer, size)
 #define UART_TERMINAL_READ_LINE_IRQ_DMA(buffer, size)	HAL_UARTEx_ReceiveToIdle_DMA(&UART_TERMINAL_HANDLER, buffer, size)
+
+#define UART_RS485_HANDLER 	            				huart4
+#define UART_RS485_INSTANCE 	            			UART4
+#define UART_RS485_SEND(string, size)    				HAL_UART_Transmit(&UART_RS485_HANDLER, string, size, HAL_MAX_DELAY)
 #endif
 
 /* *** I2C ********************************************************************************/
@@ -78,6 +82,13 @@
 #endif
 /* *** Hardware Timer *********************************************************************/
 #ifdef PLATFORM_HAS_TIMER
+#include "tim.h"
+#define TIMER_HANLDER 								htim12
+#define TIMER_INSTANCE								TIM12
+#define TIMER_START_PWM_CH1()						HAL_TIM_PWM_Start(&TIMER_HANLDER, TIM_CHANNEL_1);
+#define TIMER_START_PWM_CH2()						HAL_TIM_PWM_Start(&TIMER_HANLDER, TIM_CHANNEL_2);
+#define TIMER_SET_PWM_DUTY_CYCLE_CH1(dutyCycle) 	__HAL_TIM_SET_COMPARE(&TIMER_HANLDER, TIM_CHANNEL_1, dutyCycle);
+#define TIMER_SET_PWM_DUTY_CYCLE_CH2(dutyCycle) 	__HAL_TIM_SET_COMPARE(&TIMER_HANLDER, TIM_CHANNEL_2, dutyCycle);
 
 #endif
 /* *** Watch Dog **************************************************************************/
