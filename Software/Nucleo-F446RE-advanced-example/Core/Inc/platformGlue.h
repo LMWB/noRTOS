@@ -67,10 +67,15 @@
 /* *** I2C ********************************************************************************/
 #ifdef PLATFORM_HAS_I2C
 #include "i2c.h"
-#define I2C_HANDLER 				        							hi2c1
-#define I2C_INSTANCE				        							I2C1
-#define I2C_IS_DEVICE_READY(dev_address)    							HAL_I2C_IsDeviceReady(&I2C_HANDLER, dev_address, 1, 100)
-#define I2C_READ_MEMORY(dev_address, mem_address, pRead_buffer, length) HAL_I2C_Mem_Read(&I2C_HANDLER, dev_address, mem_address, I2C_MEMADD_SIZE_8BIT, pRead_buffer, length, 100)
+#define I2C_HANDLER 				        								hi2c1
+#define I2C_INSTANCE				        								I2C1
+#define I2C_IS_DEVICE_READY(dev_address)    								HAL_I2C_IsDeviceReady(&I2C_HANDLER, dev_address, 1, 100)
+
+#define I2C_READ_MEMORY(dev_address, mem_address, pRead_buffer, length) 	HAL_I2C_Mem_Read(	&I2C_HANDLER, dev_address, mem_address, I2C_MEMADD_SIZE_8BIT, pRead_buffer, length, 100)
+#define I2C_WRITE_MEMORY(dev_address, mem_address, pWrite_buffer, length)	HAL_I2C_Mem_Write(	&I2C_HANDLER, dev_address, mem_address, I2C_MEMADD_SIZE_8BIT, pWrite_buffer, length, 100);
+
+#define I2C_TRANSMIT(dev_address, pTXbuffer, length)						HAL_I2C_Master_Transmit(&I2C_HANDLER, dev_address, pTXbuffer, length, 100)
+#define I2C_RECEIVE(dev_address, pRXbuffer, length)							HAL_I2C_Master_Receive( &I2C_HANDLER, dev_address, pRXbuffer, length, 100)
 
 #endif
 /* *** SPI ********************************************************************************/

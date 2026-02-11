@@ -15,7 +15,7 @@
 #define SE95_ERROR_CODE	-9999
 
 DEVICE_STATUS_DEFINITION	SE95_Init( void );
-int16_t 					SE95_ReadTemperature( void );
+int16_t 					SE95_read_temperature( void );
 
 
 #endif /* DRIVERS_SE95_SE95_H_ */

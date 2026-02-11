@@ -171,7 +171,7 @@ void se95_state_machine(void) {
 		}
 		break;
 	case 1:
-		gTemperature = SE95_ReadTemperature();
+		gTemperature = SE95_read_temperature();
 		if (gTemperature == SE95_ERROR_CODE) {
 			z = 0;
 		}
@@ -198,7 +198,7 @@ void ath21_state_machine(void) {
 		}
 		break;
 	case 2:
-		if (AHT21_ReadData(&gTemperature, &gHumidity) == DEVICE_OK) {
+		if (AHT21_read_data(&gTemperature, &gHumidity) == DEVICE_OK) {
 			z = 1;
 		} else {
 			z = 0;
@@ -219,10 +219,10 @@ void bme280_state_machine(void) {
 		}
 		break;
 	case 1:
-		BME280_Read(&gTemperature, &gHumidity, &gPressure);
+		BME280_read(&gTemperature, &gHumidity, &gPressure);
 
 		// 101325 Pa ist der Standardwert, falls du kein lokales QNH hast
-		gAltitude = BME280_GetAltitudeLinear(gPressure, 100700);
+		gAltitude = BME280_get_altitude(gPressure, 100700);
 		break;
 	default:
 		z = 0;

@@ -20,22 +20,28 @@ DEVICE_STATUS_DEFINITION BME280_Init( void ) {
 
     // 1. T-Daten (und P-Daten falls nötig) auslesen
 #if USE_PRESSURE
-    HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0x88, 1, data, 26, 100);
+    //HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0x88, 1, data, 26, 100);
+    I2C_READ_MEMORY(BME280_ADDR, 0x88, data, 26);
     cal.dig_P1 = (data[7] << 8) | data[6];   cal.dig_P2 = (int16_t)((data[9] << 8) | data[8]);
     cal.dig_P3 = (int16_t)((data[11] << 8) | data[10]); cal.dig_P4 = (int16_t)((data[13] << 8) | data[12]);
     cal.dig_P5 = (int16_t)((data[15] << 8) | data[14]); cal.dig_P6 = (int16_t)((data[17] << 8) | data[16]);
     cal.dig_P7 = (int16_t)((data[19] << 8) | data[18]); cal.dig_P8 = (int16_t)((data[21] << 8) | data[20]);
     cal.dig_P9 = (int16_t)((data[23] << 8) | data[22]);
 #else
-    HAL_I2C_Mem_Read(hi2c, BME280_ADDR, 0x88, 1, data, 6, 100); // Nur T1-T3
+    //HAL_I2C_Mem_Read(hi2c, BME280_ADDR, 0x88, 1, data, 6, 100); // Nur T1-T3
+    I2C_READ_MEMORY(BME280_ADDR, 0x88, data, 6)
 #endif
     cal.dig_T1 = (data[1] << 8) | data[0];
     cal.dig_T2 = (int16_t)((data[3] << 8) | data[2]);
     cal.dig_T3 = (int16_t)((data[5] << 8) | data[4]);
 
     // 2. H-Daten auslesen (Adresse 0xA1 für H1, 0xE1 für Rest)
-    HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0xA1, 1, &cal.dig_H1, 1, 100);
-    HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0xE1, 1, data, 7, 100);
+    //HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0xA1, 1, &cal.dig_H1, 1, 100);
+    I2C_READ_MEMORY(BME280_ADDR, 0xA1, &cal.dig_H1, 1);
+
+    //HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0xE1, 1, data, 7, 100);
+    I2C_READ_MEMORY(BME280_ADDR, 0xE1, data, 7);
+
     cal.dig_H2 = (int16_t)((data[1] << 8) | data[0]);
     cal.dig_H3 = data[2];
     cal.dig_H4 = (int16_t)((data[3] << 4) | (data[4] & 0x0F));
@@ -47,8 +53,11 @@ DEVICE_STATUS_DEFINITION BME280_Init( void ) {
     uint8_t f2 = 0x01; // Hum oversampling x1
     uint8_t f4 = (0x01 << 5) | (os_p << 2) | 0x03; // Temp x1, Press x1/0, Normal Mode
 
-    HAL_I2C_Mem_Write(&I2C_HANDLER, BME280_ADDR, 0xF2, 1, &f2, 1, 100);
-    return HAL_I2C_Mem_Write(&I2C_HANDLER, BME280_ADDR, 0xF4, 1, &f4, 1, 100);
+    //HAL_I2C_Mem_Write(&I2C_HANDLER, BME280_ADDR, 0xF2, 1, &f2, 1, 100);
+    I2C_WRITE_MEMORY(BME280_ADDR, 0xF2, &f2, 1);
+
+    //return HAL_I2C_Mem_Write(&I2C_HANDLER, BME280_ADDR, 0xF4, 1, &f4, 1, 100);
+    return I2C_WRITE_MEMORY(BME280_ADDR, 0xF4, &f4, 1)
 }
 
 // --- Kompensation-Logik ---
@@ -95,7 +104,7 @@ static uint32_t compensate_H(int32_t adc_H) {
  * Lineare Annäherung der Höhe (reicht bis ca. 2000m völlig aus)
  * 1 hPa Abfall entspricht ca. 8.5 Meter Steigung.
  */
-int16_t BME280_GetAltitudeLinear(uint32_t press_pa, uint32_t sea_level_pa) {
+int16_t BME280_get_altitude(uint32_t press_pa, uint32_t sea_level_pa) {
     // Differenz in Pascal zu hPa umrechnen (/ 100)
     int32_t diff_hpa = (int32_t)sea_level_pa - (int32_t)press_pa;
     diff_hpa /= 100;
@@ -104,9 +113,10 @@ int16_t BME280_GetAltitudeLinear(uint32_t press_pa, uint32_t sea_level_pa) {
     return (int16_t)((diff_hpa * 17) / 2);
 }
 
-void BME280_Read( int16_t *temp, int16_t *hum, uint32_t *press) {
+void BME280_read( int16_t *temp, int16_t *hum, uint32_t *press) {
     uint8_t data[8];
-    DEVICE_STATUS_DEFINITION status = HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0xF7, 1, data, 8, 100);
+    //DEVICE_STATUS_DEFINITION status = HAL_I2C_Mem_Read(&I2C_HANDLER, BME280_ADDR, 0xF7, 1, data, 8, 100);
+    DEVICE_STATUS_DEFINITION status = I2C_READ_MEMORY(BME280_ADDR, 0xF7, data, 8);
     if (status != HAL_OK) return;
 
     int32_t adc_P = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4);

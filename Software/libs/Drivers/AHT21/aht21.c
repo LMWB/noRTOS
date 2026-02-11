@@ -10,9 +10,12 @@ DEVICE_STATUS_DEFINITION AHT21_Init( void ) {
     uint8_t data[1];
     // Kalibrierungsbefehl senden
     if( I2C_IS_DEVICE_READY( AHT21_I2C_ADDR ) == DEVICE_OK){
-    	if( HAL_I2C_Master_Transmit(&I2C_HANDLER, AHT21_I2C_ADDR, check_cmd, 3, 100) == DEVICE_OK){
-    		HAL_I2C_Master_Receive(&I2C_HANDLER, AHT21_I2C_ADDR, data, 1, 100);
+    	//if( HAL_I2C_Master_Transmit(&I2C_HANDLER, AHT21_I2C_ADDR, check_cmd, 3, 100) == DEVICE_OK){
+    	if( I2C_TRANSMIT(AHT21_I2C_ADDR, check_cmd, 3) == DEVICE_OK){
+    		//HAL_I2C_Master_Receive(&I2C_HANDLER, AHT21_I2C_ADDR, data, 1, 100);
+    		I2C_RECEIVE(AHT21_I2C_ADDR, data, 1);
     		uint8_t kal_status = data[0] & 0x08;
+    		kal_status = kal_status;
     		return DEVICE_OK;
     	}
     }
@@ -21,24 +24,22 @@ DEVICE_STATUS_DEFINITION AHT21_Init( void ) {
 
 DEVICE_STATUS_DEFINITION AHT21_start_convertion( void ){
     uint8_t trigger_cmd[] = {AHT21_CMD_TRIGGER, 0x33, 0x00};
-    uint8_t data[6];
 
     // 1. Messung triggern
-    if (HAL_I2C_Master_Transmit(&I2C_HANDLER, AHT21_I2C_ADDR, trigger_cmd, 3, 100) != DEVICE_OK){
+    //if (HAL_I2C_Master_Transmit(&I2C_HANDLER, AHT21_I2C_ADDR, trigger_cmd, 3, 100) != DEVICE_OK){
+    if (I2C_TRANSMIT(AHT21_I2C_ADDR, trigger_cmd, 3) != DEVICE_OK){
     	return DEVICE_ERROR;
     }
 
     return DEVICE_OK;
-
-    // 2. Warten (Messung dauert ca. 250ms)
-    //HAL_Delay(250);
 }
 
-DEVICE_STATUS_DEFINITION AHT21_ReadData( int16_t *temp_x10, int16_t *hum_x10) {
+DEVICE_STATUS_DEFINITION AHT21_read_data( int16_t *temp_x10, int16_t *hum_x10) {
     uint8_t data[6];
 
     // 3. 6 Bytes lesen (Status + 20-Bit Hum + 20-Bit Temp)
-    if (HAL_I2C_Master_Receive(&I2C_HANDLER, AHT21_I2C_ADDR, data, 6, 100) != DEVICE_OK){
+    //if (HAL_I2C_Master_Receive(&I2C_HANDLER, AHT21_I2C_ADDR, data, 6, 100) != DEVICE_OK){
+    if (I2C_RECEIVE(AHT21_I2C_ADDR, data, 6) != DEVICE_OK){
     	return DEVICE_ERROR;
     }
 

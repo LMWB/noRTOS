@@ -9,7 +9,7 @@ DEVICE_STATUS_DEFINITION SE95_Init( void ) {
  * Liest die Temperatur in 0,1°C Schritten.
  * Beispiel: 225 entspricht 22,5°C
  */
-int16_t SE95_ReadTemperature( ) {
+int16_t SE95_read_temperature( void ) {
     uint8_t buf[2];
 
     if (I2C_READ_MEMORY(SE95_I2C_ADDR, SE95_REG_TEMP, buf, 2) != DEVICE_OK) {
