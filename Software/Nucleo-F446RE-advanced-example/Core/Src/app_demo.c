@@ -9,6 +9,7 @@
 #include "Drivers/SE95/se95.h"
 #include "Drivers/AHT21/aht21.h"
 #include "Drivers/BME280/bme280.h"
+#include "Drivers/SSD1306/ssd1306.h"
 
 #include <stdio.h>
 
@@ -49,6 +50,8 @@ void noRTOS_setup(void) {
 	IIR_Low_Pass_init(&filter2);
 	IIR_Low_Pass_init(&filter3);
 	IIR_Low_Pass_init(&filter4);
+
+	ssd1306_Init();
 
 	TIMER_START_PWM_CH1();
 	TIMER_START_PWM_CH2();
@@ -131,8 +134,7 @@ void read_button_states(void){
 }
 
 void process_analog_readings(void){
-	uint32_t end;
-	uint32_t start = GET_CPU_TICKS();
+
 	if( noRTOS_wait_for_event(eBIT_MASK_ADC_INTERRUPT) ){
 		/* do stuff like digital filtering etc. */
 		IIR_Low_Pass_update(&filter1, gADC_raw_data[0]);
@@ -143,8 +145,6 @@ void process_analog_readings(void){
 		/* finally restart adc sampling */
 		ADC_START_DMA(&gADC_raw_data);
 	}
-	end = GET_CPU_TICKS();
-	gTotal_CPU_Ticks = end - start;
 }
 
 void drv8908_state_machine(void) {
@@ -242,7 +242,8 @@ void bme280_state_machine(void) {
 
 void fading_heartbeat(void) {
 	static int8_t counter = 0;
-	static uint8_t direction = 0; /* 0 => up, else => down */
+	/* 0 => up, else => down */
+	static uint8_t direction = 0;
 	/* https://www.mikrocontroller.net/articles/LED-Fading */
 //	const uint16_t pwmtable_8D[32] =
 //	{
@@ -275,12 +276,51 @@ void fading_heartbeat(void) {
 	}
 }
 
+void refresh_display(void){
+	uint32_t end;
+	uint32_t start = GET_CPU_TICKS();
+	uint8_t line_hight = 16;
+	char msg[128];
+	/* function gets called every 200ms, so it needs to be called 5 times for 1 full second */
+	static uint32_t up_time_sec = 0;
+	up_time_sec /= 5;
+
+	ssd1306_Fill(Black);
+
+	ssd1306_SetCursor(1, 0);
+	sprintf(msg, "noRTOS Demo: %ld sec", up_time_sec);
+	ssd1306_WriteString(msg, Font_7x10, White);
+
+	ssd1306_SetCursor(1, 1 * line_hight);
+	sprintf(msg, "Hello World");
+	ssd1306_WriteString(msg, Font_7x10, White);
+
+	ssd1306_SetCursor(1, 2 * line_hight);
+	sprintf(msg, "ADC 1: %ld", filter1.y1);
+	ssd1306_WriteString(msg, Font_7x10, White);
+
+	ssd1306_SetCursor(1, 3 * line_hight);
+	sprintf(msg, "ADC 2: %ld", filter2.y1);
+	ssd1306_WriteString(msg, Font_7x10, White);
+	ssd1306_UpdateScreen();
+
+	up_time_sec++;
+	end = GET_CPU_TICKS();
+	gTotal_CPU_Ticks = end - start;
+}
+
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
 
 	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_100ms, .task_callback = process_analog_readings };
 	noRTOS_add_task_to_scheduler(&analog);
+
+	noRTOS_task_t display = { .delay = eNORTOS_PERIODE_200ms, .task_callback = refresh_display};
+	noRTOS_add_task_to_scheduler(&display);
+
+	noRTOS_task_t heartbeat = { .delay = eNORTOS_PERIODE_200ms, .task_callback = fading_heartbeat};
+	noRTOS_add_task_to_scheduler(&heartbeat);
 
 	noRTOS_task_t blinky = { .delay = eNORTOS_PERIODE_500ms, .task_callback = blink_LED };
 	noRTOS_add_task_to_scheduler(&blinky);
