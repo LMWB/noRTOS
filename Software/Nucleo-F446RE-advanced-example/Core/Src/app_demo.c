@@ -51,8 +51,6 @@ void noRTOS_setup(void) {
 	IIR_Low_Pass_init(&filter3);
 	IIR_Low_Pass_init(&filter4);
 
-	ssd1306_Init();
-
 	TIMER_START_PWM_CH1();
 	TIMER_START_PWM_CH2();
 
@@ -271,38 +269,60 @@ void fading_heartbeat(void) {
 		if (counter <= 0) {
 			direction = 0;
 		}
+		break;
 	default:
 		break;
 	}
 }
 
-void refresh_display(void){
+void refresh_display(void) {
 	uint32_t end;
 	uint32_t start = GET_CPU_TICKS();
 	uint8_t line_hight = 16;
+	static uint8_t z = 0;
 	char msg[128];
 	/* function gets called every 200ms, so it needs to be called 5 times for 1 full second */
 	static uint32_t up_time_sec = 0;
-	up_time_sec /= 5;
 
-	ssd1306_Fill(Black);
+	switch (z) {
+	case 0:
+		if ( I2C_IS_DEVICE_READY(SSD1306_I2C_ADDR) == DEVICE_OK) {
+			ssd1306_Init();
+			z = 1;
+		} else {
+			z = 0;
+		}
+		break;
+	case 1:
+		ssd1306_Fill(Black);
 
-	ssd1306_SetCursor(1, 0);
-	sprintf(msg, "noRTOS Demo: %ld sec", up_time_sec);
-	ssd1306_WriteString(msg, Font_7x10, White);
+		ssd1306_SetCursor(1, 0);
+		sprintf(msg, "noRTOS Demo: %ld", up_time_sec/5);
+		ssd1306_WriteString(msg, Font_7x10, White);
 
-	ssd1306_SetCursor(1, 1 * line_hight);
-	sprintf(msg, "Hello World");
-	ssd1306_WriteString(msg, Font_7x10, White);
+		ssd1306_SetCursor(1, 1 * line_hight);
+		msg[0] = 0;
+		for(uint_fast8_t i = 0; i < (up_time_sec%18); i++){
+			msg[i] = '#';
+			msg[i+1] = 0;
+		}
+		ssd1306_WriteString(msg, Font_7x10, White);
 
-	ssd1306_SetCursor(1, 2 * line_hight);
-	sprintf(msg, "ADC 1: %ld", filter1.y1);
-	ssd1306_WriteString(msg, Font_7x10, White);
+		ssd1306_SetCursor(1, 2 * line_hight);
+		sprintf(msg, "ADC 1: %ld", filter1.y1);
+		ssd1306_WriteString(msg, Font_7x10, White);
 
-	ssd1306_SetCursor(1, 3 * line_hight);
-	sprintf(msg, "ADC 2: %ld", filter2.y1);
-	ssd1306_WriteString(msg, Font_7x10, White);
-	ssd1306_UpdateScreen();
+		ssd1306_SetCursor(1, 3 * line_hight);
+		sprintf(msg, "ADC 2: %ld", filter2.y1);
+		ssd1306_WriteString(msg, Font_7x10, White);
+		ssd1306_UpdateScreen();
+		break;
+	case 99:
+		z = z;
+		break;
+	default:
+		break;
+	}
 
 	up_time_sec++;
 	end = GET_CPU_TICKS();
@@ -316,11 +336,11 @@ void app_demo_main(void){
 	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_100ms, .task_callback = process_analog_readings };
 	noRTOS_add_task_to_scheduler(&analog);
 
-	noRTOS_task_t display = { .delay = eNORTOS_PERIODE_200ms, .task_callback = refresh_display};
-	noRTOS_add_task_to_scheduler(&display);
-
 	noRTOS_task_t heartbeat = { .delay = eNORTOS_PERIODE_200ms, .task_callback = fading_heartbeat};
 	noRTOS_add_task_to_scheduler(&heartbeat);
+
+	noRTOS_task_t display = { .delay = eNORTOS_PERIODE_200ms, .task_callback = refresh_display};
+	noRTOS_add_task_to_scheduler(&display);
 
 	noRTOS_task_t blinky = { .delay = eNORTOS_PERIODE_500ms, .task_callback = blink_LED };
 	noRTOS_add_task_to_scheduler(&blinky);

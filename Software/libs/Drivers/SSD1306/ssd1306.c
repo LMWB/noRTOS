@@ -2,6 +2,10 @@
 
 #if defined(SSD1306_USE_I2C)
 
+void ssd1306_Delay(uint32_t ms){
+	DELAY(ms);
+}
+
 void ssd1306_Reset(void) {
 	/* for I2C - do nothing */
 }
@@ -64,7 +68,7 @@ void ssd1306_Init(void) {
 	ssd1306_Reset();
 
     // Wait for the screen to boot
-    HAL_Delay(100);
+	ssd1306_Delay(100);
     
     // Init OLED
     ssd1306_WriteCommand(0xAE); //display off

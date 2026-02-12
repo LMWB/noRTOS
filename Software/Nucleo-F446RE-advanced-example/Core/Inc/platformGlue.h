@@ -19,7 +19,7 @@
 #define MAX_DELAY		HAL_MAX_DELAY
 #define DELAY(ms)       HAL_Delay(ms)
 #define GET_TICK()      HAL_GetTick() 	// Provides a tick value in millisecond.
-#define GET_CPU_TICKS()	DWT->CYCCNT;	// Provides amount of CPU Clock tick, depending on main oscillator frequency.
+#define GET_CPU_TICKS()	DWT->CYCCNT		// Provides amount of CPU Clock tick, depending on main oscillator frequency.
 
 /* *** Platform return codes ********************************************************** */
 #define DEVICE_STATUS_DEFINITION        HAL_StatusTypeDef
