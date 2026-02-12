@@ -229,13 +229,13 @@ void bme280_state_machine(void) {
 }
 
 /*
- *   htim17.Instance = TIM17;
-  htim17.Init.Prescaler = 480-1;
-  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim17.Init.Period = 1024-1;
-  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim17.Init.RepetitionCounter = 0;
-  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+ * htim17.Instance = TIM17;
+ * htim17.Init.Prescaler = 480-1;
+ * htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+ * htim17.Init.Period = 1024-1;
+ * htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+ * htim17.Init.RepetitionCounter = 0;
+ * htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
  */
 
 void fading_heartbeat(void) {
@@ -275,36 +275,29 @@ void fading_heartbeat(void) {
 	}
 }
 
-void refresh_display(void) {
-	uint32_t end;
-	uint32_t start = GET_CPU_TICKS();
-	uint8_t line_hight = 16;
+void build_display_content(void) {
+	const uint8_t line_hight = 16;
+	const uint8_t line_width = 18;
+	const uint8_t barchart_scale = 228;
 	static uint8_t z = 0;
-	char msg[128];
+	char msg[64];
 	/* function gets called every 200ms, so it needs to be called 5 times for 1 full second */
 	static uint32_t up_time_sec = 0;
 
 	switch (z) {
 	case 0:
-		if ( I2C_IS_DEVICE_READY(SSD1306_I2C_ADDR) == DEVICE_OK) {
-			ssd1306_Init();
-			z = 1;
-		} else {
-			z = 0;
-		}
-		break;
-	case 1:
 		ssd1306_Fill(Black);
 
 		ssd1306_SetCursor(1, 0);
-		sprintf(msg, "noRTOS Demo: %ld", up_time_sec/5);
+		sprintf(msg, "noRTOS Demo: %ld", up_time_sec / 5);
 		ssd1306_WriteString(msg, Font_7x10, White);
-
 		ssd1306_SetCursor(1, 1 * line_hight);
+
+		// build horizontal bar chart gauge
 		msg[0] = 0;
-		for(uint_fast8_t i = 0; i < (up_time_sec%18); i++){
+		for (uint_fast8_t i = 0; i < (up_time_sec % line_width); i++) {
 			msg[i] = '#';
-			msg[i+1] = 0;
+			msg[i + 1] = 0;
 		}
 		ssd1306_WriteString(msg, Font_7x10, White);
 
@@ -315,16 +308,81 @@ void refresh_display(void) {
 		ssd1306_SetCursor(1, 3 * line_hight);
 		sprintf(msg, "ADC 2: %ld", filter2.y1);
 		ssd1306_WriteString(msg, Font_7x10, White);
-		ssd1306_UpdateScreen();
 		break;
-	case 99:
+	case 1:
+		ssd1306_Fill(Black);
+
+		// Zeile 1
+		ssd1306_SetCursor(1, 0);
+		sprintf(msg, "x:");
+		// build horizontal bar chart gauge
+		msg[0] = 0;
+		uint8_t max = filter1.y1 / barchart_scale;
+		for (uint_fast8_t i = 0; i < (max); i++) {
+			msg[i] = '#';
+			msg[i + 1] = 0;
+		}
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 2
+		ssd1306_SetCursor(1, 1 * line_hight);
+		sprintf(msg, "y:");
+		// build horizontal bar chart gauge
+		msg[0] = 0;
+		max = filter2.y1 / barchart_scale;
+		for (uint_fast8_t i = 0; i < (max); i++) {
+			msg[i] = '#';
+			msg[i + 1] = 0;
+		}
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 3
+		ssd1306_SetCursor(1, 2 * line_hight);
+		sprintf(msg, "z:");
+		// build horizontal bar chart gauge
+		msg[0] = 0;
+		max = filter3.y1 / barchart_scale;
+		for (uint_fast8_t i = 0; i < (max); i++) {
+			msg[i] = '#';
+			msg[i + 1] = 0;
+		}
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 4
+		ssd1306_SetCursor(1, 3 * line_hight);
+		sprintf(msg, "CPU Temperature: %d", (int)filter4.y1);
+		ssd1306_WriteString(msg, Font_7x10, White);
+		break;
+	default:
+		z = 0;
+		break;
+	}
+	ssd1306_UpdateScreen();
+	up_time_sec++;
+}
+
+void refresh_display(void) {
+	uint32_t end;
+	uint32_t start = GET_CPU_TICKS();
+	static uint8_t z = 0;
+
+	switch (z) {
+	case 0:
+		if ( I2C_IS_DEVICE_READY(SSD1306_I2C_ADDR) == DEVICE_OK) {
+			ssd1306_Init();
+			z = 1;
+		} else {
+			z = z;
+		}
+		break;
+	case 1:
+		build_display_content();
 		z = z;
 		break;
 	default:
+		z = 0;
 		break;
 	}
-
-	up_time_sec++;
 	end = GET_CPU_TICKS();
 	gTotal_CPU_Ticks = end - start;
 }
@@ -332,7 +390,7 @@ void refresh_display(void) {
 void testing_watchdog_restart(void){
 	printf("So far the application ha been run for about 2 minutes. \n");
 	printf("The watchdog will restart the system in ...\n");
-	int count_down = 10;
+	int count_down = 31;
 	while(1){
 		myprintf("%d, ", count_down);
 		DELAY(1000);
@@ -341,14 +399,7 @@ void testing_watchdog_restart(void){
 }
 
 void refresh_watchdog(void){
-	printf("So far the application ha been run for about 2 minutes. \n");
-	printf("The watchdog will restart the system in ...\n");
-	int count_down = 10;
-	while(1){
-		myprintf("%d, ", count_down);
-		DELAY(1000);
-		count_down--;
-	}
+	WATCHDOG_REFRESH();
 }
 
 void app_demo_main(void){

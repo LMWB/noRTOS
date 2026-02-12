@@ -7,7 +7,7 @@
 #define PLATFORM_HAS_TIMER
 #define PLATFORM_HAS_I2C
 #define PLATFORM_HAS_SPI
-//#define PLATFORM_HAS_WATCHDOG
+#define PLATFORM_HAS_WATCHDOG
 //#define PLATFORM_HAS_CAN
 //#define PLATFORM_HAS_RTC
 #define PLATFORM_HAS_ADC
@@ -96,9 +96,9 @@
 #define TIMER_SET_PWM_DUTY_CYCLE_CH2(dutyCycle) 	__HAL_TIM_SET_COMPARE(&TIMER_HANLDER, TIM_CHANNEL_2, dutyCycle);
 
 /* *** Watch Dog **************************************************************************/
-#ifdef HAS_WATCHDOG
+#ifdef PLATFORM_HAS_WATCHDOG
 #include "iwdg.h"
-#define REFRESH_WATCHDOG()							HAL_IWDG_Refresh(&hiwdg);
+#define WATCHDOG_REFRESH()							HAL_IWDG_Refresh(&hiwdg);
 #endif
 
 #endif
