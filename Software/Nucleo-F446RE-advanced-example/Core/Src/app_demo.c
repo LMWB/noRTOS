@@ -329,6 +329,28 @@ void refresh_display(void) {
 	gTotal_CPU_Ticks = end - start;
 }
 
+void testing_watchdog_restart(void){
+	printf("So far the application ha been run for about 2 minutes. \n");
+	printf("The watchdog will restart the system in ...\n");
+	int count_down = 10;
+	while(1){
+		myprintf("%d, ", count_down);
+		DELAY(1000);
+		count_down--;
+	}
+}
+
+void refresh_watchdog(void){
+	printf("So far the application ha been run for about 2 minutes. \n");
+	printf("The watchdog will restart the system in ...\n");
+	int count_down = 10;
+	while(1){
+		myprintf("%d, ", count_down);
+		DELAY(1000);
+		count_down--;
+	}
+}
+
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
@@ -350,6 +372,13 @@ void app_demo_main(void){
 
 	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = bme280_state_machine };
 	noRTOS_add_task_to_scheduler(&temperature);
+
+	noRTOS_task_t watchdog = { .delay = eNORTOS_PERIODE_1ms, .task_callback = refresh_watchdog };
+	noRTOS_add_task_to_scheduler(&watchdog);
+
+	noRTOS_task_t test_watchdog = { .delay = eNORTOS_PERIODE_2min, .task_callback = testing_watchdog_restart };
+	/* leaf task commented out unless you like to test the watchdog */
+	//noRTOS_add_task_to_scheduler(&test_watchdog);
 
 	noRTOS_run_scheduler();
 }

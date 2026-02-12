@@ -95,9 +95,11 @@
 #define TIMER_SET_PWM_DUTY_CYCLE_CH1(dutyCycle) 	__HAL_TIM_SET_COMPARE(&TIMER_HANLDER, TIM_CHANNEL_1, dutyCycle);
 #define TIMER_SET_PWM_DUTY_CYCLE_CH2(dutyCycle) 	__HAL_TIM_SET_COMPARE(&TIMER_HANLDER, TIM_CHANNEL_2, dutyCycle);
 
-#endif
 /* *** Watch Dog **************************************************************************/
-#ifdef PLATFORM_HAS_WATCHDOG
+#ifdef HAS_WATCHDOG
+#include "iwdg.h"
+#define REFRESH_WATCHDOG()							HAL_IWDG_Refresh(&hiwdg);
+#endif
 
 #endif
 /* *** Real Time Clock ********************************************************************/
