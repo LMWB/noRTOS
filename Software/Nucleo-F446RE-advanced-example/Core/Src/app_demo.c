@@ -373,7 +373,7 @@ void app_demo_main(void){
 	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = bme280_state_machine };
 	noRTOS_add_task_to_scheduler(&temperature);
 
-	noRTOS_task_t watchdog = { .delay = eNORTOS_PERIODE_1ms, .task_callback = refresh_watchdog };
+	noRTOS_task_t watchdog = { .delay = eNORTOS_PERIODE_30s, .task_callback = refresh_watchdog };
 	noRTOS_add_task_to_scheduler(&watchdog);
 
 	noRTOS_task_t test_watchdog = { .delay = eNORTOS_PERIODE_2min, .task_callback = testing_watchdog_restart };

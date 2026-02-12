@@ -13,7 +13,7 @@ This example shows how to use the noRTOS framework with use of multiple peripher
 - CAN (internal CAN with TCAN3414 CAN FD Transceivers)
 - Hardware Timer as PWM Output Channel-1 (with OAMP as RC Filter and Voltage Follower as ADC output)
 - Hardware Timer as PWM Output Channel-2 (LED Breathing Heartbeat)
-- Watchdog (internal)
+- Watchdog (internal, set to 30sec refresh interval)
 - RTC (internal)
 - EEPROM (internal virtual and the end of FLASH)
 
