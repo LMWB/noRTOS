@@ -1,12 +1,5 @@
-/*
- * multifunc.c
- *
- *  Created on: Feb 1, 2023
- *      Author: lukasbartels
- */
-
 #include "multifunc.h"
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
 
 // buffer that hold the bit pattern in order to drive the LEDs of 7-segment display
 // do not worry about its content, it could be a representation of type:

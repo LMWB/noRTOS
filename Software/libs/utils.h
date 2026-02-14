@@ -9,7 +9,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
+
+#ifdef PLATFORM_HAS_UART
+/* *************** Alternative to standard printf() which not need the "\n" terminator ******** */
+void myprintf(const char *fmt, ...);
+
+#endif
 
 /**
  *
@@ -52,5 +58,10 @@ time_t get_epoch_time(void);
  * @retval time_t Unix Epoch Time
  */
 time_t cvt_asctime(const char *linux_asctime_str, struct tm *time);
+
+/*
+ * CPU Tick Measurement
+ */
+void DWT_Init(void);
 
 #endif

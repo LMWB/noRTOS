@@ -1,7 +1,7 @@
 #include "app_main.h"
 
 #include "noRTOS.h"
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
 #include "Drivers/Communication/ESP32AT/fifo.h"
 #include "math.h"
 
