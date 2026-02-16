@@ -23,6 +23,7 @@ static int16_t gTemperature = 0;
 static int16_t gHumidity = 0;
 static uint32_t gPressure = 0;
 static int16_t gAltitude = 0;
+static uint8_t gDisplayState = 0;
 
 static IIR_State filter1;
 static IIR_State filter2;
@@ -123,11 +124,19 @@ void read_button_states(void){
 	button_states = (button_states & 0xF); // 4 buttons max in ths example
 
 	if (button_states != gButton_states) {
-		/* save the new flag globally */
-		gButton_states = button_states;
 
 		/* do stuff when button state has changed*/
 		printf("Digital Input software interrupt\n");
+
+		// check for rising edge on bit 0
+		if( ((button_states & 0x01) == 1) && ((gButton_states & 0x01) == 0) ){
+			printf("Digital Input Rising Edge Detected\n");
+			// increment display state counter, this is a comprehensive task action
+			gDisplayState +=1;
+		}
+
+		/* save the new flag globally */
+		gButton_states = button_states;
 	}
 }
 
@@ -278,18 +287,18 @@ void fading_heartbeat(void) {
 void build_display_content(void) {
 	const uint8_t line_hight = 16;
 	const uint8_t line_width = 18;
-	const uint8_t barchart_scale = 228;
-	static uint8_t z = 0;
+	const uint8_t barchart_scale = 255; // 4095 (ADC full scale) / 255 = 16 (Characters for bar graf)
+
 	char msg[64];
 	/* function gets called every 200ms, so it needs to be called 5 times for 1 full second */
 	static uint32_t up_time_sec = 0;
 
-	switch (z) {
+	switch (gDisplayState) {
 	case 0:
 		ssd1306_Fill(Black);
 
 		ssd1306_SetCursor(1, 0);
-		sprintf(msg, "noRTOS Demo: %ld", up_time_sec / 5);
+		sprintf(msg, "Run Time: %ld s", up_time_sec / 5);
 		ssd1306_WriteString(msg, Font_7x10, White);
 		ssd1306_SetCursor(1, 1 * line_hight);
 
@@ -302,11 +311,11 @@ void build_display_content(void) {
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		ssd1306_SetCursor(1, 2 * line_hight);
-		sprintf(msg, "ADC 1: %ld", filter1.y1);
+		sprintf(msg, "ADC 1: %ld", filter4.y1);
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		ssd1306_SetCursor(1, 3 * line_hight);
-		sprintf(msg, "ADC 2: %ld", filter2.y1);
+		sprintf(msg, "noRTOS V.%d.%d", NORTOS_VERSION_MAYOR, NORTOS_VERSION_MINOR);
 		ssd1306_WriteString(msg, Font_7x10, White);
 		break;
 	case 1:
@@ -316,11 +325,10 @@ void build_display_content(void) {
 		ssd1306_SetCursor(1, 0);
 		sprintf(msg, "x:");
 		// build horizontal bar chart gauge
-		msg[0] = 0;
 		uint8_t max = filter1.y1 / barchart_scale;
 		for (uint_fast8_t i = 0; i < (max); i++) {
-			msg[i] = '#';
-			msg[i + 1] = 0;
+			msg[i+2] = '#';
+			msg[i+3] = 0;
 		}
 		ssd1306_WriteString(msg, Font_7x10, White);
 
@@ -328,11 +336,10 @@ void build_display_content(void) {
 		ssd1306_SetCursor(1, 1 * line_hight);
 		sprintf(msg, "y:");
 		// build horizontal bar chart gauge
-		msg[0] = 0;
 		max = filter2.y1 / barchart_scale;
 		for (uint_fast8_t i = 0; i < (max); i++) {
-			msg[i] = '#';
-			msg[i + 1] = 0;
+			msg[i+2] = '#';
+			msg[i+3] = 0;
 		}
 		ssd1306_WriteString(msg, Font_7x10, White);
 
@@ -340,21 +347,45 @@ void build_display_content(void) {
 		ssd1306_SetCursor(1, 2 * line_hight);
 		sprintf(msg, "z:");
 		// build horizontal bar chart gauge
-		msg[0] = 0;
 		max = filter3.y1 / barchart_scale;
 		for (uint_fast8_t i = 0; i < (max); i++) {
-			msg[i] = '#';
-			msg[i + 1] = 0;
+			msg[i+2] = '#';
+			msg[i+3] = 0;
 		}
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		// Zeile 4
 		ssd1306_SetCursor(1, 3 * line_hight);
-		sprintf(msg, "CPU Temperature: %d", (int)filter4.y1);
+		sprintf(msg, "CPU Temp.: %d", (int)filter4.y1);
 		ssd1306_WriteString(msg, Font_7x10, White);
 		break;
+	case 2:
+		ssd1306_Fill(Black);
+		// Zeile 1
+		ssd1306_SetCursor(1, 0);
+		sprintf(msg, "P: %ld", gPressure);
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 2
+		ssd1306_SetCursor(1, 1 * line_hight);
+		sprintf(msg, "T: %d", gTemperature);
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 3
+		ssd1306_SetCursor(1, 2 * line_hight);
+		sprintf(msg, "H: %d", gHumidity);
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 4
+		ssd1306_SetCursor(1, 3 * line_hight);
+		sprintf(msg, "CPU Load: %ld", gTotal_CPU_Ticks);
+		ssd1306_WriteString(msg, Font_7x10, White);
+		break;
+
+	case 3:
+		gDisplayState = 0;
 	default:
-		z = 0;
+		gDisplayState = 0;
 		break;
 	}
 	ssd1306_UpdateScreen();
