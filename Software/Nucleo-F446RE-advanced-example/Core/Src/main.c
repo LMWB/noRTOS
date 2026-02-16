@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "can.h"
 #include "dma.h"
 #include "i2c.h"
 #include "iwdg.h"
@@ -103,6 +104,7 @@ int main(void)
   MX_UART4_Init();
   MX_TIM12_Init();
   MX_IWDG_Init();
+  MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
 
   app_demo_main();
