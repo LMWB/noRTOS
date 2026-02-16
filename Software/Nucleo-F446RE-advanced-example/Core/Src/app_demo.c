@@ -5,13 +5,14 @@
 #include "noRTOS.h"
 #include "utils.h"
 #include "dsp.h"
+
 #include "Drivers/DRV8908/drv8908.h"
 #include "Drivers/SE95/se95.h"
 #include "Drivers/AHT21/aht21.h"
 #include "Drivers/BME280/bme280.h"
 #include "Drivers/SSD1306/ssd1306.h"
 
-//#include "Drivers/Communication/CAN/can_config.h"
+#include "Drivers/Communication/CAN/can_config.h"
 
 #include <stdio.h>
 
@@ -43,15 +44,15 @@ void noRTOS_setup(void) {
 	printf("STM32 UUID (hex): 0x%08lX-0x%08lX-0x%08lX \r\n", cpu_id.uid[0], cpu_id.uid[1], cpu_id.uid[2]);
 	printf("\r\n");
 
-//	// override CAN-ID with CPU-UID
-//	canID = cpu_id.uid[0];
-//
-//	// set CAN ID as CPU ID
-//	uint32_t extID = canID;
-//	configure_can_tx_identifier(extID);
-//
-//	// set CAN filter mask
-//	set_can_extended_ID_filter(extID);
+	// override CAN-ID with CPU-UID
+	canID = cpu_id.uid[0];
+
+	// set CAN ID as CPU ID
+	uint32_t extID = canID;
+	configure_can_tx_identifier(extID);
+
+	// set CAN filter mask
+	set_can_extended_ID_filter(extID);
 
 	drv8908_Init();
 
