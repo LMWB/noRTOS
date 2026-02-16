@@ -8,7 +8,7 @@
 #define PLATFORM_HAS_I2C
 #define PLATFORM_HAS_SPI
 #define PLATFORM_HAS_WATCHDOG
-//#define PLATFORM_HAS_CAN
+#define PLATFORM_HAS_CAN
 //#define PLATFORM_HAS_RTC
 #define PLATFORM_HAS_ADC
 
@@ -114,18 +114,20 @@
 #endif
 
 /* *** CAN ********************************************************************/
-#ifdef PLATFORM_HAS_RTC
+/* also consider to adjust the CAN-driver functions! */
+#ifdef PLATFORM_HAS_CAN
 #include "can.h"
-#define CAN_HANDLER 							hcan
-#define CAN_INSTANCE            				CAN
-#define CAN_CONFIGURE_FILTER(canFilterConfig)	HAL_CAN_ConfigFilter(&CAN_HANDLER, &canFilterConfig)
-#define CAN_START_PERIPHERAL() 					HAL_CAN_Start(&CAN_HANDLER)
-#define CAN_STOP_PERIPHERAL() 					HAL_CAN_Stop(&CAN_HANDLER)
-#define CAN_ACTIVATE_RX_INTERRUPT() 			HAL_CAN_ActivateNotification(&CAN_HANDLER, CAN_IT_RX_FIFO0_MSG_PENDING)
+#define CAN_HANDLER 							hcan2
+#define CAN_INSTANCE            				CAN2
+#define CAN_CONFIGURE_FILTER(canFilterConfig)	HAL_CAN_ConfigFilter(	&CAN_HANDLER, &canFilterConfig)
+#define CAN_START_PERIPHERAL() 					HAL_CAN_Start(			&CAN_HANDLER)
+#define CAN_STOP_PERIPHERAL() 					HAL_CAN_Stop(  			&CAN_HANDLER)
+#define CAN_ACTIVATE_RX_INTERRUPT() 			HAL_CAN_ActivateNotification(	&CAN_HANDLER, CAN_IT_RX_FIFO0_MSG_PENDING)
 static uint32_t  TxMailbox1;
 #define SEND_CAN_MESSAGE(txHeader, txData) 		HAL_CAN_AddTxMessage(&CAN_HANDLER, &txHeader, txData, &TxMailbox1);
 #endif
 
+/* *** ADC ********************************************************************/
 #ifdef PLATFORM_HAS_ADC
 #include "adc.h"
 #define ADC_HANDLER 				hadc1

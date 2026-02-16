@@ -11,6 +11,8 @@
 #include "Drivers/BME280/bme280.h"
 #include "Drivers/SSD1306/ssd1306.h"
 
+//#include "Drivers/Communication/CAN/can_config.h"
+
 #include <stdio.h>
 
 uint8_t uart2_buffer[UART_BUFFER_SIZE] = {0};
@@ -40,6 +42,16 @@ void noRTOS_setup(void) {
 	printf("STM32 UUID (int): %ld-%ld-%ld \r\n", cpu_id.uid[0], cpu_id.uid[1], cpu_id.uid[2]);
 	printf("STM32 UUID (hex): 0x%08lX-0x%08lX-0x%08lX \r\n", cpu_id.uid[0], cpu_id.uid[1], cpu_id.uid[2]);
 	printf("\r\n");
+
+//	// override CAN-ID with CPU-UID
+//	canID = cpu_id.uid[0];
+//
+//	// set CAN ID as CPU ID
+//	uint32_t extID = canID;
+//	configure_can_tx_identifier(extID);
+//
+//	// set CAN filter mask
+//	set_can_extended_ID_filter(extID);
 
 	drv8908_Init();
 
