@@ -98,6 +98,10 @@ void noRTOS_ADC_IRQ(void){
 	//ADC_START_DMA(&gADC_raw_data);
 }
 
+void noRTOS_CAN_RX_IRQ(void){
+	printf("CAN RX interrupt\n");
+}
+
 /* -------- Synchronous Tasks ----------------- */
 void blink_LED(void) {
 	LED_GREEN_TOGGLE();
@@ -446,6 +450,17 @@ void refresh_watchdog(void){
 	WATCHDOG_REFRESH();
 }
 
+void can_dummy_message(void){
+	static uint32_t txMessageCounter = 0x2020202; // to have 1 bit set in all four bytes
+	txMessageCounter++;
+	uint8_t m[4];
+	m[0] = txMessageCounter & 0xff;
+	m[1] = (txMessageCounter & 0xff00) >> 8;
+	m[2] = (txMessageCounter & 0xff0000) >> 16;
+	m[3] = (txMessageCounter & 0xff000000) >> 24;
+	send_can_message(canID, m, 4);
+}
+
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
@@ -464,6 +479,9 @@ void app_demo_main(void){
 
 	noRTOS_task_t snake = { .delay = eNORTOS_PERIODE_500ms, .task_callback = drv8908_state_machine };
 	noRTOS_add_task_to_scheduler(&snake);
+
+	noRTOS_task_t canTX = { .delay = eNORTOS_PERIODE_500ms, .task_callback = can_dummy_message };
+	noRTOS_add_task_to_scheduler(&canTX);
 
 	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = bme280_state_machine };
 	noRTOS_add_task_to_scheduler(&temperature);
