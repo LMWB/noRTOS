@@ -42,10 +42,16 @@ extern uint8_t canRxData[8];
 extern uint32_t canID;
 #endif
 
+/* set filter mask, start can peripheral, enables RX interrupts */
 void set_can_extended_ID_filter(uint32_t extID);
+
+/* */
 void configure_can_tx_identifier(uint32_t extID);
+
+/* */
 void configure_can_tx_data(uint8_t dlc, uint8_t* data );
 
+/* */
 void send_can_message(uint32_t CAN_ID, uint8_t* can_data, uint8_t can_data_length);
 
 #endif /* CAN_CAN_CONFIG_H_ */

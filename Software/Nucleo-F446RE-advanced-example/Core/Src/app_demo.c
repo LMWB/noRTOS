@@ -54,6 +54,11 @@ void noRTOS_setup(void) {
 	// set CAN filter mask
 	set_can_extended_ID_filter(extID);
 
+	// set CAN filter mask
+	set_can_extended_ID_filter(extID);
+	printf("CAN filter has been set to 0x%lX\r\n", extID);
+	printf("Device will only react to CAN messages with this ID\r\n");
+
 	drv8908_Init();
 
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
@@ -531,6 +536,26 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
 	if(hadc->Instance == ADC_INSTANCE){
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_ADC_INTERRUPT);
 		noRTOS_set_event_received_flag(eBIT_MASK_ADC_INTERRUPT);
+	}
+}
+
+/* *************** STM32 HAL Based CAN RX interrupt *************** */
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+	uint32_t fill_level = HAL_CAN_GetRxFifoFillLevel(hcan, CAN_FILTER_FIFO0);
+	/* fill_level not used yet */
+	fill_level = fill_level;
+
+	/* pick up incoming data and release the CAN Peripheral */
+	if( HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &canRxHeader, canRxData) == HAL_OK){
+		set_can_message_pending();
+
+		/* depending on what you like to do when receiving CAN message */
+
+		/* use this if you like to react immediately (asynchronous) */
+		noRTOS_set_interrupt_received_flag(eBIT_MASK_CAN_INTERRUPT);
+		/* use this if you like to wait for a CAN message (synchronous) */
+		noRTOS_set_event_received_flag(eBIT_MASK_CAN_INTERRUPT);
 	}
 }
 
