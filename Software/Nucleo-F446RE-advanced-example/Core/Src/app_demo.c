@@ -47,16 +47,15 @@ void noRTOS_setup(void) {
 	// override CAN-ID with CPU-UID
 	canID = cpu_id.uid[0];
 
-	// set CAN ID as CPU ID
-	uint32_t extID = canID;
-	configure_can_tx_identifier(extID);
+	// set CPU ID as CAN ID
+	configure_can_tx_identifier(canID);
 
 	// set CAN filter mask
-	set_can_extended_ID_filter(extID);
+	set_can_extended_ID_filter(canID);
 
 	// set CAN filter mask
-	set_can_extended_ID_filter(extID);
-	printf("CAN filter has been set to 0x%lX\r\n", extID);
+	set_can_extended_ID_filter(canID);
+	printf("CAN filter has been set to 0x%lX\r\n", canID);
 	printf("Device will only react to CAN messages with this ID\r\n");
 
 	drv8908_Init();
@@ -73,6 +72,7 @@ void noRTOS_setup(void) {
 	TIMER_START_PWM_CH1();
 	TIMER_START_PWM_CH2();
 
+	/* cpu load counter */
 	DWT_Init();
 }
 
@@ -456,13 +456,13 @@ void refresh_watchdog(void){
 }
 
 void can_dummy_message(void){
-	static uint32_t txMessageCounter = 0x2020202; // to have 1 bit set in all four bytes
+	static uint32_t txMessageCounter = 0xAABBCCDD; // to have 1 bit set in all four bytes
 	txMessageCounter++;
 	uint8_t m[4];
-	m[0] = txMessageCounter & 0xff;
-	m[1] = (txMessageCounter & 0xff00) >> 8;
-	m[2] = (txMessageCounter & 0xff0000) >> 16;
-	m[3] = (txMessageCounter & 0xff000000) >> 24;
+	m[3] = txMessageCounter & 0xff;
+	m[2] = (txMessageCounter & 0xff00) >> 8;
+	m[1] = (txMessageCounter & 0xff0000) >> 16;
+	m[0] = (txMessageCounter & 0xff000000) >> 24;
 	send_can_message(canID, m, 4);
 }
 

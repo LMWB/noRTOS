@@ -124,5 +124,5 @@ static uint8_t uartRXbuffer[32];
 void send_can_message(uint32_t CAN_ID, uint8_t* can_data, uint8_t can_data_length){
 	configure_can_tx_identifier(CAN_ID);
 	configure_can_tx_data(can_data_length, can_data);
-	SEND_CAN_MESSAGE(canTxHeader, can_data);
+	SEND_CAN_MESSAGE(canTxHeader, canTxData);
 }
