@@ -11,6 +11,7 @@
 #include "Drivers/AHT21/aht21.h"
 #include "Drivers/BME280/bme280.h"
 #include "Drivers/SSD1306/ssd1306.h"
+#include "Drivers/PCF8574/pcf8574.h"
 
 #include "Drivers/Communication/CAN/can_config.h"
 
@@ -173,6 +174,29 @@ void process_analog_readings(void){
 
 		/* finally restart adc sampling */
 		ADC_START_DMA(&gADC_raw_data);
+	}
+}
+
+void pfc8574_state_machine(void) {
+	static uint8_t z = 0;
+	switch (z) {
+	case 0:
+		// 0xF0 -> 1111 0000 (Pins 4-7 auf High für Input, Pins 0-3 auf Low für LEDs aus)
+		if ( PCF8574_Init( 0xF0 ) == HAL_OK) {
+			z = 1;
+		}
+		break;
+	case 1:
+		PCF8574_Write( 0x0F );
+		z = 2;
+		break;
+	case 2:
+		PCF8574_Write( 0xF0 );
+		z = 1;
+		break;
+	default:
+		z = 0;
+		break;
 	}
 }
 
@@ -455,15 +479,40 @@ void refresh_watchdog(void){
 	WATCHDOG_REFRESH();
 }
 
-void can_dummy_message(void){
-	static uint32_t txMessageCounter = 0xAABBCCDD; // to have 1 bit set in all four bytes
-	txMessageCounter++;
+void can_dummy_message(void) {
+	static uint8_t z = 0;
 	uint8_t m[4];
-	m[3] = txMessageCounter & 0xff;
-	m[2] = (txMessageCounter & 0xff00) >> 8;
-	m[1] = (txMessageCounter & 0xff0000) >> 16;
-	m[0] = (txMessageCounter & 0xff000000) >> 24;
-	send_can_message(canID, m, 4);
+	uint32_t messageID = canID;
+
+	switch (z) {
+	case 0:
+		m[3] = gPressure & 0xff;
+		m[2] = (gPressure & 0xff00) >> 8;
+		m[1] = (gPressure & 0xff0000) >> 16;
+		m[0] = (gPressure & 0xff000000) >> 24;
+		messageID += 0;
+		z=1;
+		break;
+	case 1:
+		m[3] = gTemperature & 0xff;
+		m[2] = (gTemperature & 0xff00) >> 8;
+		m[1] = (gTemperature & 0xff0000) >> 16;
+		m[0] = (gTemperature & 0xff000000) >> 24;
+		messageID += 0;
+		z=2;
+		break;
+	case 2:
+		m[3] = gHumidity & 0xff;
+		m[2] = (gHumidity & 0xff00) >> 8;
+		m[1] = (gHumidity & 0xff0000) >> 16;
+		m[0] = (gHumidity & 0xff000000) >> 24;
+		messageID += 0;
+		z=0;
+		break;
+	default:
+		break;
+	}
+	send_can_message(messageID, m, 4);
 }
 
 void app_demo_main(void){
@@ -481,6 +530,9 @@ void app_demo_main(void){
 
 	noRTOS_task_t blinky = { .delay = eNORTOS_PERIODE_500ms, .task_callback = blink_LED };
 	noRTOS_add_task_to_scheduler(&blinky);
+
+	noRTOS_task_t blinky2 = { .delay = eNORTOS_PERIODE_500ms, .task_callback = pfc8574_state_machine };
+	noRTOS_add_task_to_scheduler(&blinky2);
 
 	noRTOS_task_t snake = { .delay = eNORTOS_PERIODE_500ms, .task_callback = drv8908_state_machine };
 	noRTOS_add_task_to_scheduler(&snake);
