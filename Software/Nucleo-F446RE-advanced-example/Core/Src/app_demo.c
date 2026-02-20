@@ -73,6 +73,11 @@ void noRTOS_setup(void) {
 	TIMER_START_PWM_CH1();
 	TIMER_START_PWM_CH2();
 
+	char t[] = "Fri Feb 19 17:47:56 2026";
+	struct tm tm;
+	cvt_asctime(t, &tm);
+	set_gmtime_stm32(&tm);
+
 	/* cpu load counter */
 	DWT_Init();
 }
@@ -433,6 +438,30 @@ void build_display_content(void) {
 		break;
 
 	case 3:
+		struct tm *ptm;
+		ptm = get_gmtime_stm32();
+		ssd1306_Fill(Black);
+		// Zeile 1
+		ssd1306_SetCursor(1, 0);
+		sprintf(msg, "Time: %02d:%02d:%02d", ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 2
+		ssd1306_SetCursor(1, 1 * line_hight);
+		sprintf(msg, "Date: %02d:%02d:%02d",ptm->tm_mday, ptm->tm_mon+1, ptm->tm_year-100);
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 3
+		ssd1306_SetCursor(1, 2 * line_hight);
+		sprintf(msg, "---");
+		ssd1306_WriteString(msg, Font_7x10, White);
+
+		// Zeile 4
+		ssd1306_SetCursor(1, 3 * line_hight);
+		sprintf(msg, "CPU Load: %ld", gTotal_CPU_Ticks);
+		ssd1306_WriteString(msg, Font_7x10, White);
+		break;
+	case 4:
 		gDisplayState = 0;
 	default:
 		gDisplayState = 0;
