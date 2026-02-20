@@ -4,7 +4,7 @@ install python can library with
  - pip install typing_extensions --upgrade
 
 start tha PEAK CAN Dongle on OS via terminal
->>> sudo ip link set can0 up type can bitrate 500000 fd off sample-point 0.3
+>>> sudo ip link set can0 up type can bitrate 500000 fd off sample-point 0.4
 
 LED on USB dongle needs to blink green
 
@@ -52,10 +52,10 @@ predefined_can_payload = ["01", "01 02", "01 02 03", "01 02 03 04", "01 02 03 04
 
 # predefined CAN message offsets
 CAN_ID_SIGNALS_BASE         = 0x1000
-CAN_ID_OFFSET_ANALOG1       = 0x01
-CAN_ID_OFFSET_ANALOG2       = 0x02
-CAN_ID_OFFSET_DIGITAL1      = 0x03
-CAN_ID_OFFSET_TEMPERATURE   = 0x04
+CAN_ID_OFFSET_PRESSURE      = 0x01
+CAN_ID_OFFSET_TEMPERATURE   = 0x02
+CAN_ID_OFFSET_HUMIDITY      = 0x03
+CAN_ID_OFFSET_XXX           = 0x04
 
 # Max log lines
 MAX_LOG_LINES = 100
@@ -88,14 +88,10 @@ class CanGuiApp:
         # Analog signals (5 labels)
         tk.Label(frame_signals, text="Analog Signals").grid(row=2, column=0, sticky="w")
         self.analog_labels = []
-        for i in range(5):
+        for i in range(3):
             lbl = tk.Label(frame_signals, text=f"A{i+1}: ---")
             lbl.grid(row=3 + i//3, column=i % 3, padx=5, pady=2, sticky="w")
             self.analog_labels.append(lbl)
-
-        # Temperature label
-        self.temp_label = tk.Label(frame_signals, text="Temp: --- °C")
-        self.temp_label.grid(row=5, column=0, sticky="w", pady=5)
         
         # --- Listener Controls ---
         frame_listen = tk.LabelFrame(master, text="Listen CAN Frame")
@@ -180,48 +176,32 @@ class CanGuiApp:
 
     def update_signals(self, msg):
         base_id = int(self.id_listen.get(), 16)
-        DIGITAL_ID = base_id + CAN_ID_SIGNALS_BASE + CAN_ID_OFFSET_DIGITAL1
-        ANALOG1_ID = base_id + CAN_ID_SIGNALS_BASE + CAN_ID_OFFSET_ANALOG1
-        ANALOG2_ID = base_id + CAN_ID_SIGNALS_BASE + CAN_ID_OFFSET_ANALOG2
+        PRESSURE_ID = base_id + CAN_ID_SIGNALS_BASE + CAN_ID_OFFSET_PRESSURE
+        TEMPERATURE_ID = base_id + CAN_ID_SIGNALS_BASE + CAN_ID_OFFSET_TEMPERATURE
+        HUMIDITY_ID = base_id + CAN_ID_SIGNALS_BASE + CAN_ID_OFFSET_HUMIDITY
 
-        if msg.arbitration_id == DIGITAL_ID:
-            val = msg.data[0]
-            for i in range(6):
-                if val & (1 << i):
-                    self.digital_labels[i].config(bg="green", fg="white")
-                else:
-                    self.digital_labels[i].config(bg="red", fg="white")
-
-        elif msg.arbitration_id == ANALOG1_ID:
-            if len(msg.data) >= 8:
-                a1 = int.from_bytes(msg.data[0:2], byteorder='big', signed=True)
-                a2 = int.from_bytes(msg.data[2:4], byteorder='big', signed=True)
-                a3 = int.from_bytes(msg.data[4:6], byteorder='big', signed=True)
-                a4 = int.from_bytes(msg.data[6:8], byteorder='big', signed=True)
-
-                a1 = a1*3.3/4096            # convert to voltage
-                a1 = 1/0.0071*(a1-0.9587)   # convert to Ohm
-
-                a2 = a2*3.3/4096            # convert to voltage
-                a2 = 1/0.0071*(a2-0.9587)   # convert to Ohm
-
-                a3 = a3*3.3/4096            # convert to voltage
-                a4 = a4*3.3/4096            # convert to voltage
-
-                self.analog_labels[0].config(text=f"A1: {a1:.2f} Ohm")
-                self.analog_labels[1].config(text=f"A2: {a2:.2f} Ohm")
-                self.analog_labels[2].config(text=f"A3: {a3:.2f} V")
-                self.analog_labels[3].config(text=f"A4: {a4:.2f} V")
-                
-        elif msg.arbitration_id == ANALOG2_ID:
+        if msg.arbitration_id == PRESSURE_ID:
             if len(msg.data) >= 4:
-                a5 = int.from_bytes(msg.data[0:2], byteorder='big', signed=True)
-                a5 = 3.3/0.138*a5/4096
-                self.analog_labels[4].config(text=f"A5: {a5:.2f} V")
+                raw = int.from_bytes(msg.data[0:4], byteorder='big', signed=True)
+                press = raw / 100.0
+                self.analog_labels[0].config(text=f"Press: {press:.2f} hP")
+
+        elif msg.arbitration_id == TEMPERATURE_ID:
+            if len(msg.data) >= 4:
+                raw = int.from_bytes(msg.data[0:4], byteorder='big', signed=True)
+                temp = raw / 100.0
+                self.analog_labels[1].config(text=f"Temp: {temp:.2f} °C")
+            
+                # a1 = int.from_bytes(msg.data[0:2], byteorder='big', signed=True)
+                # a2 = int.from_bytes(msg.data[2:4], byteorder='big', signed=True)
+                # a3 = int.from_bytes(msg.data[4:6], byteorder='big', signed=True)
+                # a4 = int.from_bytes(msg.data[6:8], byteorder='big', signed=True)
                 
-                raw = int.from_bytes(msg.data[2:4], byteorder='big', signed=True)
-                temp = raw / 1000.0
-                self.temp_label.config(text=f"Temp: {temp:.2f} °C")
+        elif msg.arbitration_id == HUMIDITY_ID:
+            if len(msg.data) >= 4:
+                raw = int.from_bytes(msg.data[0:4], byteorder='big', signed=True)
+                hum = raw / 10.0
+                self.analog_labels[2].config(text=f"H: {hum:.2f} %")
 
     def on_close(self):
         self.notifier.stop()

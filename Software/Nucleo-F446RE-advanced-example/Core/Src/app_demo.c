@@ -487,6 +487,11 @@ void can_dummy_message(void) {
 	static uint8_t z = 0;
 	uint8_t m[4];
 	uint32_t messageID = canID;
+	uint32_t const offset = 0x1000;
+	uint32_t const p = 0x01;
+	uint32_t const t = 0x02;
+	uint32_t const h = 0x03;
+
 
 	switch (z) {
 	case 0:
@@ -494,7 +499,7 @@ void can_dummy_message(void) {
 		m[2] = (gPressure & 0xff00) >> 8;
 		m[1] = (gPressure & 0xff0000) >> 16;
 		m[0] = (gPressure & 0xff000000) >> 24;
-		messageID += 0;
+		messageID = messageID + offset + p;
 		z=1;
 		break;
 	case 1:
@@ -502,7 +507,7 @@ void can_dummy_message(void) {
 		m[2] = (gTemperature & 0xff00) >> 8;
 		m[1] = (gTemperature & 0xff0000) >> 16;
 		m[0] = (gTemperature & 0xff000000) >> 24;
-		messageID += 0;
+		messageID = messageID + offset + t;
 		z=2;
 		break;
 	case 2:
@@ -510,7 +515,7 @@ void can_dummy_message(void) {
 		m[2] = (gHumidity & 0xff00) >> 8;
 		m[1] = (gHumidity & 0xff0000) >> 16;
 		m[0] = (gHumidity & 0xff000000) >> 24;
-		messageID += 0;
+		messageID = messageID + offset + h;
 		z=0;
 		break;
 	default:
