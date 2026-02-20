@@ -355,6 +355,8 @@ void build_display_content(void) {
 
 	switch (gDisplayState) {
 	case 0:
+		uint32_t adc_ref_voltage = 	ADC_CALC_REF_VOLTAGE(gADC_raw_data[5]);
+		uint16_t adc_voltage = 		ADC_CALC_DATA_TO_MILLI_VOLT(adc_ref_voltage, filter4.y1);
 		ssd1306_Fill(Black);
 
 		ssd1306_SetCursor(1, 0);
@@ -371,7 +373,7 @@ void build_display_content(void) {
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		ssd1306_SetCursor(1, 2 * line_hight);
-		sprintf(msg, "ADC 1: %ld", filter4.y1);
+		sprintf(msg, "ADC 1: %ld mV", adc_voltage);
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		ssd1306_SetCursor(1, 3 * line_hight);

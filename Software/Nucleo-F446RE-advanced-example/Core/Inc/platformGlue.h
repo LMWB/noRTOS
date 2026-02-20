@@ -137,6 +137,9 @@ static uint32_t  TxMailbox1;
 #define ADC_NO_OF_CHANNELS 			7
 
 #define ADC_START_DMA(pADC_raw_data_buffer)		HAL_ADC_Start_DMA(&ADC_HANDLER, (uint32_t*) pADC_raw_data_buffer, ADC_NO_OF_CHANNELS)
+
+#define ADC_CALC_REF_VOLTAGE(int_ref_volt_sample)					__LL_ADC_CALC_VREFANALOG_VOLTAGE(int_ref_volt_sample, 		LL_ADC_RESOLUTION_12B)
+#define ADC_CALC_DATA_TO_MILLI_VOLT(ref_milli_volt, adc_raw_data)	__LL_ADC_CALC_DATA_TO_VOLTAGE(ref_milli_volt, adc_raw_data, LL_ADC_RESOLUTION_12B)
 #endif
 
 /* *** UID ********************************************************************/
