@@ -22,7 +22,8 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "app_demo.h"
+#include "noRTOS.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -263,6 +264,8 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   /* USER CODE BEGIN 6 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  memcpy(usb_RX_buffer, Buf, *Len);
+  noRTOS_set_interrupt_received_flag(eBIT_MASK_USB_INTERRUPT);
   return (USBD_OK);
   /* USER CODE END 6 */
 }

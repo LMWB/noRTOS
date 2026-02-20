@@ -102,6 +102,11 @@ void noRTOS_DIGITAL_INPUT_IRQ(void){
 	printf("Digital Input interrupt\n");
 }
 
+void noRTOS_DIGITAL_USB_IRQ(void){
+	/* do some stuff you like to do when IRQ has triggered */
+	printf("USB RX interrupt\n");
+}
+
 void noRTOS_ADC_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 
@@ -651,6 +656,16 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 
 // todo: where to move ?
+/* *************** USB VCOM Buffer *************** */
+uint8_t usb_RX_buffer[512] = {0}; // used at usbd_csc_if.c line 266
+uint32_t msg_cnt = 0;
+
+int vcom_write(char *ptr, int len)
+{
+	CDC_Transmit_FS((uint8_t*) ptr, (uint16_t)len);
+	return len;
+}
+
 /* *************** UART Byte Wise Interrupt Receiver *************** */
 
 static uint16_t rx_size = 0;

@@ -135,11 +135,6 @@ static uint32_t  TxMailbox1;
 #define ADC_HANDLER 				hadc1
 #define ADC_INSTANCE				ADC1
 #define ADC_NO_OF_CHANNELS 			7
-#define ADC_CHANNELS_RESISTOR_1		0
-#define ADC_CHANNELS_RESISTOR_2		1
-#define ADC_CHANNELS_VOLTAGE_1		2
-#define ADC_CHANNELS_VOLTAGE_2		3
-#define ADC_CHANNELS_POWER_SUPPLY	4
 
 #define ADC_START_DMA(pADC_raw_data_buffer)		HAL_ADC_Start_DMA(&ADC_HANDLER, (uint32_t*) pADC_raw_data_buffer, ADC_NO_OF_CHANNELS)
 #endif
