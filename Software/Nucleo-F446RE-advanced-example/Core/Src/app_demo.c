@@ -297,31 +297,35 @@ void fading_heartbeat(void) {
 	static int8_t counter = 0;
 	/* 0 => up, else => down */
 	static uint8_t direction = 0;
+	const uint8_t START = 24;
+	const uint8_t STOP = 64;
+
 	/* https://www.mikrocontroller.net/articles/LED-Fading */
 //	const uint16_t pwmtable_8D[32] =
 //	{
 //	    0, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 8, 10, 11, 13, 16, 19, 23,
 //	    27, 32, 38, 45, 54, 64, 76, 91, 108, 128, 152, 181, 215, 255
 //	};
-	const uint16_t pwmtable_10[64] = { 0, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5,
-			5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 19, 21, 23, 26, 29, 32,
-			36, 40, 44, 49, 55, 61, 68, 76, 85, 94, 105, 117, 131, 146, 162,
-			181, 202, 225, 250, 279, 311, 346, 386, 430, 479, 534, 595, 663,
-			739, 824, 918, 1023 };
 
-	//__HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, pwmtable_10[counter]);
-	//TIMER_SET_PWM_DUTY_CYCLE_CH1(pwmtable_10[counter]);
+	const uint16_t pwmtable_10[64] = {
+			0, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6,
+			6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 19, 21, 23,
+			26, 29, 32, 36, 40, 44, 49, 55, 61, 68, 76, 85,
+			94, 105, 117, 131, 146, 162, 181, 202, 225, 250,
+			279, 311, 346, 386, 430, 479, 534, 595, 663, 739, 824, 918, 1023 };
+
+	TIMER_SET_PWM_DUTY_CYCLE_CH1(pwmtable_10[counter]);
 
 	switch (direction) {
 	case 0: /* counting up */
 		counter++;
-		if (counter >= 64 - 1) {
+		if (counter >= STOP) {
 			direction = 1;
 		}
 		break;
 	case 1: /* counting down */
 		counter--;
-		if (counter <= 0) {
+		if (counter <= START) {
 			direction = 0;
 		}
 		break;
@@ -522,7 +526,7 @@ void app_demo_main(void){
 	noRTOS_task_t analog = { .delay = eNORTOS_PERIODE_100ms, .task_callback = process_analog_readings };
 	noRTOS_add_task_to_scheduler(&analog);
 
-	noRTOS_task_t heartbeat = { .delay = eNORTOS_PERIODE_200ms, .task_callback = fading_heartbeat};
+	noRTOS_task_t heartbeat = { .delay = eNORTOS_PERIODE_100ms, .task_callback = fading_heartbeat};
 	noRTOS_add_task_to_scheduler(&heartbeat);
 
 	noRTOS_task_t display = { .delay = eNORTOS_PERIODE_200ms, .task_callback = refresh_display};
