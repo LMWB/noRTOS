@@ -8,6 +8,9 @@ extern uint8_t uart2_buffer[UART_BUFFER_SIZE];
 extern uint8_t uart4_buffer[UART_BUFFER_SIZE];
 extern uint8_t usb_RX_buffer[512];
 
+extern uint8_t uart2_buffer_rx_size;
+extern uint8_t uart4_buffer_rx_size;
+
 void app_demo_main(void);
 
 // todo: where to move ?

@@ -20,6 +20,11 @@ __weak void noRTOS_UART_RX_IRQ(void){
 }
 
 /* override this with your implementation */
+__weak void noRTOS_RS485_RX_IRQ(void){
+	;
+}
+
+/* override this with your implementation */
 __weak void noRTOS_CAN_RX_IRQ(void){
 	;
 }
@@ -138,6 +143,12 @@ static void noRTOS_run_always(void) {
 			// do something
 			noRTOS_USB_IRQ();
 			clear_bit_in_byte(eBIT_MASK_USB_INTERRUPT, &noRTOS_interrupt_flag);
+		}
+
+		if (noRTOS_interrupt_flag & eBIT_MASK_RS485_INTERRUPT) {
+			// do something
+			noRTOS_RS485_RX_IRQ();
+			clear_bit_in_byte(eBIT_MASK_RS485_INTERRUPT, &noRTOS_interrupt_flag);
 		}
 	}
 }

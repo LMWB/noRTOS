@@ -20,6 +20,9 @@
 uint8_t uart2_buffer[UART_BUFFER_SIZE] = {0};
 uint8_t uart4_buffer[UART_BUFFER_SIZE] = {0};
 
+uint8_t uart2_buffer_rx_size = 0;
+uint8_t uart4_buffer_rx_size = 0;
+
 static uint32_t gTotal_CPU_Ticks = 0;
 static uint32_t gButton_states = 0x80000000;
 static uint16_t gADC_raw_data[ADC_NO_OF_CHANNELS];
@@ -61,7 +64,8 @@ void noRTOS_setup(void) {
 
 	drv8908_Init();
 
-	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
+	UART_TERMINAL_READ_LINE_IRQ(	uart2_buffer, UART_BUFFER_SIZE);
+	UART_RS485_READ_LINE_IRQ(		uart4_buffer, UART_BUFFER_SIZE);
 
 	ADC_START_DMA(&gADC_raw_data);
 
@@ -78,12 +82,23 @@ void noRTOS_setup(void) {
 	cvt_asctime(t, &tm);
 	set_gmtime_stm32(&tm);
 
+	/* put RS485 in receiver mode */
+	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 0);
+
 	/* cpu load counter */
 	DWT_Init();
 }
 
 void uart_loop_back(char* buf){
 	printf("loopback %s", buf);
+}
+
+void rs485_loop_back(char* buf, uint8_t length){
+	/* put RS485 in transmit mode */
+	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 1);
+	UART_RS485_SEND( (uint8_t*)buf, length);
+	/* put RS485 in receiver mode */
+	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 0);
 }
 
 /* -------- Asynchronous Tasks ----------------- */
@@ -95,6 +110,16 @@ void noRTOS_UART_RX_IRQ(void){
 
 	/* now since the IRQ callback has been executed, we can restart the IRQ trigger */
 	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
+}
+
+/* override */
+void noRTOS_RS485_RX_IRQ(void){
+	/* do some stuff you like to do when IRQ has triggered */
+	printf("received RS45 interrupt\n");
+	rs485_loop_back( (char*)uart4_buffer, uart4_buffer_rx_size);
+
+	/* now since the IRQ callback has been executed, we can restart the IRQ trigger */
+	UART_RS485_READ_LINE_IRQ(uart4_buffer, UART_BUFFER_SIZE);
 }
 
 void noRTOS_DIGITAL_INPUT_IRQ(void){
@@ -527,6 +552,7 @@ void can_dummy_message(void) {
 	uint32_t const p = 0x01;
 	uint32_t const t = 0x02;
 	uint32_t const h = 0x03;
+	uint32_t const adc = 0x04;
 
 
 	switch (z) {
@@ -552,12 +578,28 @@ void can_dummy_message(void) {
 		m[1] = (gHumidity & 0xff0000) >> 16;
 		m[0] = (gHumidity & 0xff000000) >> 24;
 		messageID = messageID + offset + h;
+		z=3;
+		break;
+	case 3:
+		m[3] = filter4.y1 & 0xff;
+		m[2] = (filter4.y1 & 0xff00) >> 8;
+		m[1] = (filter4.y1 & 0xff0000) >> 16;
+		m[0] = (filter4.y1 & 0xff000000) >> 24;
+		messageID = messageID + offset + adc;
 		z=0;
 		break;
 	default:
 		break;
 	}
 	send_can_message(messageID, m, 4);
+}
+
+void rs485_dummy_message(void){
+	/* put RS485 in transmit mode */
+	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 1);
+	UART_RS485_SEND((uint8_t*)"Hello World\r\n", 13);
+	/* put RS485 in receiver mode */
+	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 0);
 }
 
 void app_demo_main(void){
@@ -585,6 +627,9 @@ void app_demo_main(void){
 	noRTOS_task_t canTX = { .delay = eNORTOS_PERIODE_500ms, .task_callback = can_dummy_message };
 	noRTOS_add_task_to_scheduler(&canTX);
 
+	noRTOS_task_t rs485TX = { .delay = eNORTOS_PERIODE_1s, .task_callback = rs485_dummy_message };
+	noRTOS_add_task_to_scheduler(&rs485TX);
+
 	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = bme280_state_machine };
 	noRTOS_add_task_to_scheduler(&temperature);
 
@@ -610,14 +655,16 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
 		// add null terminator to override what was received before
-		uart2_buffer[Size+1] = '\0';
+		uart2_buffer_rx_size = Size;
+		uart2_buffer[uart2_buffer_rx_size+1] = '\0';
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_UART_INTERRUPT);
 	}
 
 	if (huart->Instance == UART_RS485_INSTANCE){
 		// add null terminator to override what was received before
-		uart2_buffer[Size+1] = '\0';
-		noRTOS_set_interrupt_received_flag(eBIT_MASK_UART_INTERRUPT);
+		uart4_buffer_rx_size = Size;
+		uart4_buffer[uart4_buffer_rx_size+1] = '\0';
+		noRTOS_set_interrupt_received_flag(eBIT_MASK_RS485_INTERRUPT);
 	}
 }
 
