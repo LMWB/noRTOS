@@ -80,10 +80,19 @@ void noRTOS_DIGITAL_INPUT_IRQ(void);
 void noRTOS_UART_RX_IRQ(void);
 
 /* override this with your implementation */
+void noRTOS_RS485_RX_IRQ(void);
+
+/* override this with your implementation */
 void noRTOS_CAN_RX_IRQ(void);
 
 /* override this with your implementation */
 void noRTOS_ADC_IRQ(void);
+
+/* override this with your implementation */
+void noRTOS_USB_IRQ(void);
+
+/* override this with your implementation */
+void noRTOS_RESERVED_IRQ(void);
 
 void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type);
 

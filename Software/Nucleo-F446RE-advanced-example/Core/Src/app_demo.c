@@ -127,7 +127,7 @@ void noRTOS_DIGITAL_INPUT_IRQ(void){
 	printf("Digital Input interrupt\n");
 }
 
-void noRTOS_DIGITAL_USB_IRQ(void){
+void noRTOS_USB_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 	printf("USB RX interrupt\n");
 }
@@ -602,6 +602,12 @@ void rs485_dummy_message(void){
 	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 0);
 }
 
+void usb_dummy_message(void){
+	char usb_msg[] = "Hello World from USB\r\n";
+
+	vcom_write(usb_msg, strlen(usb_msg));
+}
+
 void app_demo_main(void){
 	noRTOS_task_t buttons = { .delay = eNORTOS_PERIODE_100ms, .task_callback = read_button_states };
 	noRTOS_add_task_to_scheduler(&buttons);
@@ -629,6 +635,9 @@ void app_demo_main(void){
 
 	noRTOS_task_t rs485TX = { .delay = eNORTOS_PERIODE_1s, .task_callback = rs485_dummy_message };
 	noRTOS_add_task_to_scheduler(&rs485TX);
+
+	noRTOS_task_t usb_vcom = { .delay = eNORTOS_PERIODE_1s, .task_callback = usb_dummy_message };
+	noRTOS_add_task_to_scheduler(&usb_vcom);
 
 	noRTOS_task_t temperature = { .delay = eNORTOS_PERIODE_1s, .task_callback = bme280_state_machine };
 	noRTOS_add_task_to_scheduler(&temperature);
