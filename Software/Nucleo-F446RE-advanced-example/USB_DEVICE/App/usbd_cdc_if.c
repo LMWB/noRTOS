@@ -22,7 +22,7 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include "app_demo.h"
+#include "Drivers/Communication/USB_VCOM/usb_vcom.h"
 #include "noRTOS.h"
 /* USER CODE END INCLUDE */
 

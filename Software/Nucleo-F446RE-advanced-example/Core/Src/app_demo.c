@@ -712,16 +712,3 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 		noRTOS_set_event_received_flag(eBIT_MASK_CAN_INTERRUPT);
 	}
 }
-
-
-// todo: where to move ?
-/* *************** USB VCOM Buffer *************** */
-uint8_t usb_RX_buffer[512] = {0}; // used at usbd_csc_if.c line 266
-uint32_t msg_cnt = 0;
-
-int vcom_write(char *ptr, int len)
-{
-	CDC_Transmit_FS((uint8_t*) ptr, (uint16_t)len);
-	return len;
-}
-
