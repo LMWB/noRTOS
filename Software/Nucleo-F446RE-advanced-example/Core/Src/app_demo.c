@@ -35,7 +35,7 @@ static IIR_State filter2;
 static IIR_State filter3;
 static IIR_State filter4;
 
-/* override */
+/* override setup function, will be executed once at boot */
 void noRTOS_setup(void) {
 	/* read the STM32 CPU unique ID, could be handy to have for various
 	 * things in software since this is is a singular number world wide */
@@ -87,30 +87,17 @@ void noRTOS_setup(void) {
 	DWT_Init();
 }
 
-void uart_loop_back(char* buf){
-	printf("loopback %s", buf);
-}
-
-void rs485_loop_back(char* buf, uint8_t length){
-	/* put RS485 in transmit mode */
-	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 1);
-	UART_RS485_SEND( (uint8_t*)buf, length);
-	/* put RS485 in receiver mode */
-	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 0);
-}
-
 /* -------- Asynchronous Tasks ----------------- */
-/* override */
+/* override noRTOS callback */
 void noRTOS_UART_RX_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 	printf("received UART interrupt\n");
-	uart_loop_back((char*)terminal_buffer);
+	terminal_loop_back( (char*)terminal_buffer );
 
 	/* now since the IRQ callback has been executed, we can restart the IRQ trigger */
 	UART_TERMINAL_READ_LINE_IRQ(terminal_buffer, TERMINAL_BUFFER_SIZE);
 }
 
-/* override */
 void noRTOS_RS485_RX_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 	printf("received RS45 interrupt\n");
@@ -191,6 +178,13 @@ void read_button_states(void){
 			gDisplayState +=1;
 		}
 
+		// check for rising edge on bit 4
+		if( ((button_states & 0x08) == 1) && ((gButton_states & 0x08) == 0) ){
+			printf("Digital Input Rising Edge Detected\n");
+			// decrement display state counter, this is a comprehensive task action
+			gDisplayState -=1;
+		}
+
 		/* save the new flag globally */
 		gButton_states = button_states;
 	}
@@ -207,64 +201,6 @@ void process_analog_readings(void){
 
 		/* finally restart adc sampling */
 		ADC_START_DMA(&gADC_raw_data);
-	}
-}
-
-void pfc8574_state_machine(void) {
-	static uint8_t z = 0;
-	switch (z) {
-	case 0:
-		// 0xF0 -> 1111 0000 (Pins 4-7 auf High für Input, Pins 0-3 auf Low für LEDs aus)
-		if ( PCF8574_Init( 0xF0 ) == HAL_OK) {
-			z = 1;
-		}
-		break;
-	case 1:
-		PCF8574_Write( 0x0F );
-		z = 2;
-		break;
-	case 2:
-		PCF8574_Write( 0xF0 );
-		z = 1;
-		break;
-	default:
-		z = 0;
-		break;
-	}
-}
-
-void drv8908_state_machine(void) {
-	static uint16_t z = 0;
-
-	if (z == 0x1FF) {
-		// if 8 bits full clear to 0
-		z = 0;
-	}
-
-	DRV8908_write_bulk_output_register(z);
-
-	// adding zeros from right (LSB)
-	z = z << 1;
-	z = z | 1;
-}
-
-void se95_state_machine(void) {
-	static uint8_t z = 0;
-	switch (z) {
-	case 0:
-		if (SE95_Init() == DEVICE_OK) {
-			z = 1;
-		}
-		break;
-	case 1:
-		gTemperature = SE95_read_temperature();
-		if (gTemperature == SE95_ERROR_CODE) {
-			z = 0;
-		}
-		break;
-	default:
-		z = 0;
-		break;
 	}
 }
 

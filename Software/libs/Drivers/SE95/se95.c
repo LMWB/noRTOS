@@ -24,3 +24,26 @@ int16_t SE95_read_temperature( void ) {
     // Das ergibt die Temperatur in Zehntel-Grad Celsius.
     return (raw * 5) / 16;
 }
+
+int16_t se95_state_machine(void) {
+	static uint8_t z = 0;
+	int16_t temperature_times_10 = 0;
+	switch (z) {
+	case 0:
+		if (SE95_Init() == DEVICE_OK) {
+			z = 1;
+		}
+		break;
+	case 1:
+		temperature_times_10 = SE95_read_temperature();
+		if (temperature_times_10 == SE95_ERROR_CODE) {
+			z = 0;
+		}
+		break;
+	default:
+		z = 0;
+		break;
+	}
+
+	return temperature_times_10;
+}

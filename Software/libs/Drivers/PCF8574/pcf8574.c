@@ -17,3 +17,26 @@ DEVICE_STATUS_DEFINITION PCF8574_Read( uint8_t *val) {
     // Einfaches Lesen vom Bus liefert den Status der Pins
     return I2C_RECEIVE( PCF8574_ADDR, val, 1);
 }
+
+void pfc8574_state_machine(void) {
+	static uint8_t z = 0;
+	switch (z) {
+	case 0:
+		// 0xF0 -> 1111 0000 (Pins 4-7 auf High für Input, Pins 0-3 auf Low für LEDs aus)
+		if ( PCF8574_Init( 0xF0 ) == DEVICE_OK) {
+			z = 1;
+		}
+		break;
+	case 1:
+		PCF8574_Write( 0x0F );
+		z = 2;
+		break;
+	case 2:
+		PCF8574_Write( 0xF0 );
+		z = 1;
+		break;
+	default:
+		z = 0;
+		break;
+	}
+}

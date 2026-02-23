@@ -193,38 +193,53 @@ void DRV8908_set_output(uint8_t channel, uint8_t state)
     drv_write_reg(regAddr, regVal);
 }
 
-void drv8908_demo(void){
-	DRV8908_set_output(0, 1);
-	HAL_Delay(500);
-	DRV8908_set_output(1, 1);
-	HAL_Delay(500);
-	DRV8908_set_output(2, 1);
-	HAL_Delay(500);
-	DRV8908_set_output(3, 1);
-	HAL_Delay(500);
-	DRV8908_set_output(4, 1);
-	HAL_Delay(500);
-	DRV8908_set_output(5, 1);
-	HAL_Delay(500);
-	DRV8908_set_output(6, 1);
-	HAL_Delay(500);
-	DRV8908_set_output(7, 1);
-	HAL_Delay(500);
+//void drv8908_demo(void){
+//	DRV8908_set_output(0, 1);
+//	HAL_Delay(500);
+//	DRV8908_set_output(1, 1);
+//	HAL_Delay(500);
+//	DRV8908_set_output(2, 1);
+//	HAL_Delay(500);
+//	DRV8908_set_output(3, 1);
+//	HAL_Delay(500);
+//	DRV8908_set_output(4, 1);
+//	HAL_Delay(500);
+//	DRV8908_set_output(5, 1);
+//	HAL_Delay(500);
+//	DRV8908_set_output(6, 1);
+//	HAL_Delay(500);
+//	DRV8908_set_output(7, 1);
+//	HAL_Delay(500);
+//
+//	DRV8908_set_output(0, 0);
+//	HAL_Delay(500);
+//	DRV8908_set_output(1, 0);
+//	HAL_Delay(500);
+//	DRV8908_set_output(2, 0);
+//	HAL_Delay(500);
+//	DRV8908_set_output(3, 0);
+//	HAL_Delay(500);
+//	DRV8908_set_output(4, 0);
+//	HAL_Delay(500);
+//	DRV8908_set_output(5, 0);
+//	HAL_Delay(500);
+//	DRV8908_set_output(6, 0);
+//	HAL_Delay(500);
+//	DRV8908_set_output(7, 0);
+//	HAL_Delay(500);
+//}
 
-	DRV8908_set_output(0, 0);
-	HAL_Delay(500);
-	DRV8908_set_output(1, 0);
-	HAL_Delay(500);
-	DRV8908_set_output(2, 0);
-	HAL_Delay(500);
-	DRV8908_set_output(3, 0);
-	HAL_Delay(500);
-	DRV8908_set_output(4, 0);
-	HAL_Delay(500);
-	DRV8908_set_output(5, 0);
-	HAL_Delay(500);
-	DRV8908_set_output(6, 0);
-	HAL_Delay(500);
-	DRV8908_set_output(7, 0);
-	HAL_Delay(500);
+void drv8908_state_machine(void) {
+	static uint16_t z = 0;
+
+	if (z == 0x1FF) {
+		// if 8 bits full clear to 0
+		z = 0;
+	}
+
+	DRV8908_write_bulk_output_register(z);
+
+	// adding zeros from right (LSB)
+	z = z << 1;
+	z = z | 1;
 }

@@ -10,6 +10,20 @@ uint8_t rs485_buffer_rx_size = 0;
 static uint16_t rx_size = 0;
 static bool uart2_read_line_complete = false;
 
+void rs485_loop_back(char* buf, uint8_t length){
+	/* put RS485 in transmit mode */
+	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 1);
+	UART_RS485_SEND( (uint8_t*)buf, length);
+	/* put RS485 in receiver mode */
+	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 0);
+}
+
+
+
+
+
+
+
 bool noRTOS_is_UART2_read_line_complete(void){
 	return uart2_read_line_complete;
 }

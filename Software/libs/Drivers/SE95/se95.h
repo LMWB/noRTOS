@@ -17,5 +17,6 @@
 DEVICE_STATUS_DEFINITION	SE95_Init( void );
 int16_t 					SE95_read_temperature( void );
 
+int16_t se95_state_machine(void);
 
 #endif /* DRIVERS_SE95_SE95_H_ */

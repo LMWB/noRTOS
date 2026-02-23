@@ -8,6 +8,8 @@ void DRV8908_write_bulk_output_register(uint8_t state);
 
 void drv8908_Init(void);
 
-void drv8908_demo(void);
+//void drv8908_demo(void);
+
+void drv8908_state_machine(void);
 
 #endif /* DRV8908_H_ */

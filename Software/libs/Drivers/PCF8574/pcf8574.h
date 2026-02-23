@@ -22,5 +22,6 @@ DEVICE_STATUS_DEFINITION PCF8574_Write( uint8_t val);
  */
 DEVICE_STATUS_DEFINITION PCF8574_Read( uint8_t *val);
 
+void pfc8574_state_machine(void);
 
 #endif /* DRIVERS_PCF8574_PCF8574_H_ */
