@@ -14,14 +14,15 @@
 #include "Drivers/PCF8574/pcf8574.h"
 
 #include "Drivers/Communication/CAN/can_config.h"
+#include "Drivers/Communication/RS485/rs485.h"
 
 #include <stdio.h>
 
 uint8_t uart2_buffer[UART_BUFFER_SIZE] = {0};
-uint8_t uart4_buffer[UART_BUFFER_SIZE] = {0};
+
 
 uint8_t uart2_buffer_rx_size = 0;
-uint8_t uart4_buffer_rx_size = 0;
+
 
 static uint32_t gTotal_CPU_Ticks = 0;
 static uint32_t gButton_states = 0x80000000;
@@ -65,7 +66,7 @@ void noRTOS_setup(void) {
 	drv8908_Init();
 
 	UART_TERMINAL_READ_LINE_IRQ(	uart2_buffer, UART_BUFFER_SIZE);
-	UART_RS485_READ_LINE_IRQ(		uart4_buffer, UART_BUFFER_SIZE);
+	UART_RS485_READ_LINE_IRQ(		rs485_buffer, UART_BUFFER_SIZE);
 
 	ADC_START_DMA(&gADC_raw_data);
 
@@ -116,10 +117,10 @@ void noRTOS_UART_RX_IRQ(void){
 void noRTOS_RS485_RX_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 	printf("received RS45 interrupt\n");
-	rs485_loop_back( (char*)uart4_buffer, uart4_buffer_rx_size);
+	rs485_loop_back( (char*)rs485_buffer, rs485_buffer_rx_size);
 
 	/* now since the IRQ callback has been executed, we can restart the IRQ trigger */
-	UART_RS485_READ_LINE_IRQ(uart4_buffer, UART_BUFFER_SIZE);
+	UART_RS485_READ_LINE_IRQ(rs485_buffer, RS485_BUFFER_SIZE);
 }
 
 void noRTOS_DIGITAL_INPUT_IRQ(void){
@@ -671,8 +672,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 
 	if (huart->Instance == UART_RS485_INSTANCE){
 		// add null terminator to override what was received before
-		uart4_buffer_rx_size = Size;
-		uart4_buffer[uart4_buffer_rx_size+1] = '\0';
+		rs485_buffer_rx_size = Size;
+		rs485_buffer[rs485_buffer_rx_size+1] = '\0';
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_RS485_INTERRUPT);
 	}
 }
@@ -722,41 +723,5 @@ int vcom_write(char *ptr, int len)
 {
 	CDC_Transmit_FS((uint8_t*) ptr, (uint16_t)len);
 	return len;
-}
-
-/* *************** UART Byte Wise Interrupt Receiver *************** */
-
-static uint16_t rx_size = 0;
-static bool uart2_read_line_complete = false;
-
-bool noRTOS_is_UART2_read_line_complete(void){
-	return uart2_read_line_complete;
-}
-
-void noRTOS_UART2_read_byte_with_interrupt(void){
-	HAL_UART_Receive_IT(&huart2, &uart2_buffer[rx_size], 1);
-}
-
-void noRTOS_UART2_clear_rx_buffer(void){
-	rx_size = 0;
-	uart2_read_line_complete = false;
-	memset(uart2_buffer, 0, UART_BUFFER_SIZE);
-	noRTOS_UART2_read_byte_with_interrupt();
-}
-
-void noRTOS_UART2_echo_whats_been_received(void)
-{
-	UART_TERMINAL_SEND( uart2_buffer, rx_size);
-}
-
-void noRTOS_UART2_receive_byte_callback(void){
-	/* check if read line complete */
-	if(rx_size >= 3 && uart2_buffer[rx_size-1] == '\r' && uart2_buffer[rx_size] == '\n'){
-		rx_size++;
-		uart2_read_line_complete = true;
-	}else{
-		rx_size++;
-		noRTOS_UART2_read_byte_with_interrupt();
-	}
 }
 
