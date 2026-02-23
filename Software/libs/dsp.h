@@ -3,6 +3,15 @@
 
 #include <stdint.h>
 
+typedef struct {
+    int32_t x1, x2;
+    int32_t y1, y2;
+} IIR_State;
+
+void IIR_Low_Pass_init(IIR_State *s);
+
+int16_t IIR_Low_Pass_update(IIR_State *s, int16_t input);
+
 int32_t exponential_avaraging_int32(int32_t new_value);
 float exponential_avaraging_float(float new_value);
 

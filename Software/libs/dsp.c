@@ -1,5 +1,29 @@
 #include "dsp.h"
 
+
+void IIR_Low_Pass_init(IIR_State *s) {
+    s->x1 = s->x2 = s->y1 = s->y2 = 0;
+}
+
+int16_t IIR_Low_Pass_update(IIR_State *s, int16_t input) {
+    // Koeffizienten (2^14 skaliert) für 10Hz/1Hz
+    const int32_t b0 = 1105, b1 = 2210, b2 = 1105;
+    const int32_t a1 = -18727, a2 = 6763;
+
+    int32_t accumulator = b0 * input + b1 * s->x1 + b2 * s->x2
+                          - a1 * s->y1 - a2 * s->y2;
+
+    int32_t output = accumulator >> 14;
+
+    s->x2 = s->x1;
+    s->x1 = input;
+    s->y2 = s->y1;
+    s->y1 = output;
+
+    return (int16_t)output;
+}
+
+
 /**
  * y(n) = x(n)*a + y(n-1)*(1-a)
  */

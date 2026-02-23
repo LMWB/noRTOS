@@ -1,5 +1,5 @@
 #include "esp32at.h"
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
 #include "utils.h"
 #include <stdio.h>
 #include <string.h>

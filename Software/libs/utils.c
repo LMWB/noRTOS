@@ -1,24 +1,12 @@
 #include "utils.h"
 
-
+#ifdef PLATFORM_HAS_UART
 /* override _write, is used by puts and printf */
 int _write(int file, char *ptr, int len)
 {
     UART_TERMINAL_SEND((uint8_t*) ptr, (uint16_t)len);
 	return len;
 }
-
-
-uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string) {
-	uint32_t bytes_written = 0;
-	for (uint_fast32_t i = 0; i < buffer_size; i++) {
-		bytes_written += sprintf(hex_string + 2 * i, "%02X", buffer[i]);
-	}
-	hex_string[2 * buffer_size] = '\0';
-
-	return bytes_written + 1;
-}
-
 
 void myprintf(const char *fmt, ...) {
 	static char buffer[256];
@@ -31,13 +19,26 @@ void myprintf(const char *fmt, ...) {
 	UART_TERMINAL_SEND((uint8_t *) buffer, len);
 }
 
+#endif
+
+uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string) {
+	uint32_t bytes_written = 0;
+	for (uint_fast32_t i = 0; i < buffer_size; i++) {
+		bytes_written += sprintf(hex_string + 2 * i, "%02X", buffer[i]);
+	}
+	hex_string[2 * buffer_size] = '\0';
+
+	return bytes_written + 1;
+}
+
+
 #ifdef PLATFORM_HAS_I2C
 void scan_i2c_sensors(void) {
 	myprintf("Scanning I2C bus...\n");
 
 	DEVICE_STATUS_DEFINITION res;
 	for (uint16_t i = 0; i < 128; i++) {
-		res = IS_I2C_DEVICE_READY(i << 1);
+		res = I2C_IS_DEVICE_READY(i << 1);
 		if( i%32 == 0){
 			myprintf("\n");
 		}
@@ -172,7 +173,27 @@ uint8_t set_gmtime_stm32(struct tm *time) {
 }
 #endif
 
+// helper to start stop cpu cycle counter
+void DWT_Init(void) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // activate Trace
+    DWT->CYCCNT = 0;                                // reset counter
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            // start counter
+}
 
+// example code
+//void check_performance(void ) {
+//    uint32_t start, end, total;
+//
+//    start = DWT->CYCCNT;
+//
+//    // some heavy calculation
+//    __NOP();
+//
+//    end = DWT->CYCCNT;
+//    total = end - start;
+//
+//    // 'total' enthält nun die exakte Anzahl der CPU-Zyklen
+//}
 
 
 
