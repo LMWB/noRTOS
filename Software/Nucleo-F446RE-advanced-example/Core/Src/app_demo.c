@@ -13,15 +13,12 @@
 #include "Drivers/SSD1306/ssd1306.h"
 #include "Drivers/PCF8574/pcf8574.h"
 
-#include "Drivers/Communication/CAN/can_config.h"
+#include "Drivers/Communication/Terminal/terminal.h"
 #include "Drivers/Communication/RS485/rs485.h"
+#include "Drivers/Communication/CAN/can_config.h"
+#include "Drivers/Communication/USB_VCOM/usb_vcom.h"
 
 #include <stdio.h>
-
-uint8_t uart2_buffer[UART_BUFFER_SIZE] = {0};
-
-
-uint8_t uart2_buffer_rx_size = 0;
 
 
 static uint32_t gTotal_CPU_Ticks = 0;
@@ -65,8 +62,8 @@ void noRTOS_setup(void) {
 
 	drv8908_Init();
 
-	UART_TERMINAL_READ_LINE_IRQ(	uart2_buffer, UART_BUFFER_SIZE);
-	UART_RS485_READ_LINE_IRQ(		rs485_buffer, UART_BUFFER_SIZE);
+	UART_TERMINAL_READ_LINE_IRQ(	terminal_buffer,	TERMINAL_BUFFER_SIZE);
+	UART_RS485_READ_LINE_IRQ(		rs485_buffer,		RS485_BUFFER_SIZE);
 
 	ADC_START_DMA(&gADC_raw_data);
 
@@ -107,10 +104,10 @@ void rs485_loop_back(char* buf, uint8_t length){
 void noRTOS_UART_RX_IRQ(void){
 	/* do some stuff you like to do when IRQ has triggered */
 	printf("received UART interrupt\n");
-	uart_loop_back((char*)uart2_buffer);
+	uart_loop_back((char*)terminal_buffer);
 
 	/* now since the IRQ callback has been executed, we can restart the IRQ trigger */
-	UART_TERMINAL_READ_LINE_IRQ(uart2_buffer, UART_BUFFER_SIZE);
+	UART_TERMINAL_READ_LINE_IRQ(terminal_buffer, TERMINAL_BUFFER_SIZE);
 }
 
 /* override */
@@ -399,7 +396,7 @@ void build_display_content(void) {
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		ssd1306_SetCursor(1, 2 * line_hight);
-		sprintf(msg, "ADC 1: %ld mV", adc_voltage);
+		sprintf(msg, "ADC 1: %d mV", adc_voltage);
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		ssd1306_SetCursor(1, 3 * line_hight);
@@ -654,10 +651,12 @@ void app_demo_main(void){
 }
 
 /* *************** STM32 HAL Based UART Bridge with RX-byte (char) interrupt *************** */
+
+// not in use right now
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
 		//uart_increment_pointer();
-		UART_TERMINAL_READ_BYTE_IRQ( uart2_buffer );
+		UART_TERMINAL_READ_BYTE_IRQ( terminal_buffer );
 	}
 }
 
@@ -665,8 +664,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 	if (huart->Instance == UART_TERMINAL_INSTANCE){
 		// add null terminator to override what was received before
-		uart2_buffer_rx_size = Size;
-		uart2_buffer[uart2_buffer_rx_size+1] = '\0';
+		terminal_buffer_rx_size = Size;
+		terminal_buffer[terminal_buffer_rx_size+1] = '\0';
 		noRTOS_set_interrupt_received_flag(eBIT_MASK_UART_INTERRUPT);
 	}
 

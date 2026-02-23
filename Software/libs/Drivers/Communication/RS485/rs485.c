@@ -1,5 +1,6 @@
 #include "rs485.h"
 #include "platformGlue.h"
+#include <string.h>
 
 
 /* *************** UART Byte Wise Interrupt Receiver *************** */

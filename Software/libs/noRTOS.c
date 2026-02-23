@@ -45,8 +45,6 @@ __weak void noRTOS_RESERVED_IRQ(void){
 }
 
 
-
-
 /**
  * *************** Task Schedular ***************
  */
@@ -65,9 +63,10 @@ static void clear_bit_in_byte(const uint8_t bit, uint8_t* byte){
 	*byte &= ~bit;
 }
 
-static void clear_all_bits_in_byte(uint8_t* byte){
-	*byte = 0;
-}
+// preparation in case we need it one time
+//static void clear_all_bits_in_byte(uint8_t* byte){
+//	*byte = 0;
+//}
 
 /* public */
 void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type){
