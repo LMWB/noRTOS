@@ -18,6 +18,8 @@
 #include "Drivers/Communication/CAN/can_config.h"
 #include "Drivers/Communication/USB_VCOM/usb_vcom.h"
 
+#include "Drivers/EEPROM/eeprom.h"
+
 #include <stdio.h>
 
 
@@ -82,6 +84,26 @@ void noRTOS_setup(void) {
 
 	/* put RS485 in receiver mode */
 	WRITE_PIN(RS485_Enable_GPIO_Port, RS485_Enable_Pin, 0);
+
+	/* Unlock the Flash Program Erase controller */
+	HAL_FLASH_Unlock();
+
+	/* EEPROM Init */
+	if (EE_Init() != DEVICE_OK) {
+		Error_Handler();
+	}
+
+	// testing write variable to eeprom
+//	EE_WriteVariable(VirtAddVarTab[0],  (uint16_t)0x0001);
+//	EE_WriteVariable(VirtAddVarTab[1],  (uint16_t)0xf00f);
+//	EE_WriteVariable(VirtAddVarTab[4],  (uint16_t)0x0FF0);
+
+	// testing, variables have never been written
+	EE_ReadVariable(VirtAddVarTab[0],  &VarDataTab[0]);
+	EE_ReadVariable(VirtAddVarTab[1],  &VarDataTab[1]);
+	EE_ReadVariable(VirtAddVarTab[2],  &VarDataTab[2]);
+	EE_ReadVariable(VirtAddVarTab[3],  &VarDataTab[3]);
+	EE_ReadVariable(VirtAddVarTab[4],  &VarDataTab[4]);
 
 	/* cpu load counter */
 	DWT_Init();
