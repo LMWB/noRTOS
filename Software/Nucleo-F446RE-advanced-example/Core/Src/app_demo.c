@@ -18,7 +18,7 @@
 #include "Drivers/Communication/CAN/can_config.h"
 #include "Drivers/Communication/USB_VCOM/usb_vcom.h"
 
-#include "Drivers/EEPROM/eeprom.h"
+#include "Drivers/EEPROM/virtualEEPROM.h"
 
 #include <stdio.h>
 

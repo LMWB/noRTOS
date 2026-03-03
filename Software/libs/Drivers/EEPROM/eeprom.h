@@ -23,7 +23,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-#include "virtualEEPROM.h"
+#include "virtualEEPROM_config.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* EEPROM emulation firmware error codes */
