@@ -62,6 +62,7 @@ Here are my **personal** thoughts on advantage and disadvantage to the use ot no
 
 # Examples
 - [Basic Example](Projects/Basic-Nucleo/README.md)
+- [Advanced Example](Projects/Advanced-Nucleo/README.md)
 - [Multifunction Shield](Projects/Multi-Function-Shield/README.md)
 - [ESP32 as Wifi Coprocessor with AT-Command-Firmware](Projects/AT-Commands/README.md)
 - [Multi Sensor Reading and Processing](Projects/Multi-Sensors/README.md)

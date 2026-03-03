@@ -9,7 +9,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include "hardwareGlobal.h"
+#include "platformGlue.h"
+
+#ifdef PLATFORM_HAS_UART
+/* *************** Alternative to standard printf() which not need the "\n" terminator ******** */
+void myprintf(const char *fmt, ...);
+
+#endif
 
 /**
  *
@@ -44,13 +50,18 @@ uint8_t set_gmtime_stm32(struct tm *time);
 time_t get_epoch_time(void);
 
 /**
- * @brief  Convert the unix epoch time string e.g. "Mar 23 15:19:26 2023"
+ * @brief  Convert the unix epoch time string e.g. "Tue Oct 19 17:47:56 2021"
  * 		to unix epoch time in seconds from Jan 1st 1900 00:00:00
  * 		e.g. python time.asctime()
- * @param  pointer to char array (string) asctime() String e.g. "Mar 23 15:19:26 2023".
+ * @param  pointer to char array (string) asctime() String e.g. "Tue Oct 19 17:47:56 2021".
  * @param  pointer to struct tm from time.h for application use on exact time/date Format
  * @retval time_t Unix Epoch Time
  */
 time_t cvt_asctime(const char *linux_asctime_str, struct tm *time);
+
+/*
+ * CPU Tick Measurement
+ */
+void DWT_Init(void);
 
 #endif
