@@ -48,7 +48,7 @@ void noRTOS_setup(void) {
 //	esp32_mqtt_client.wifi_ssid 			= "iPhone11";
 //	esp32_mqtt_client.wifi_password 		= "abc123456";
 
-	esp32_mqtt_client.mqtt_broker_endpoint 	= "broker.emqx.io"; // EMQX broker endpoint
+	esp32_mqtt_client.mqtt_broker_endpoint 	= "broker.emqx.io"; // HIVEMQ broker endpoint
 	esp32_mqtt_client.mqtt_username 		= "emqx";  			// MQTT username for authentication
 	esp32_mqtt_client.mqtt_password 		= "public";  		// MQTT password for authentication
 	esp32_mqtt_client.mqtt_port 			= "1883";  			// MQTT port (TCP)
