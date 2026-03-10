@@ -6,7 +6,7 @@ I'm sure there are many thousand different very good approaches out there on how
 
 # How To Use
 Copy paste the ```noRTOS.c, noRTOS.h, utils.c, utils.h``` files to your project tree.
-Copy paste ```hardwareGlobal.h``` to you project tree and modify line ```19 #define GET_TICK()``` according to your platform.
+Copy paste ```platformGlue.h``` to you project tree and modify line ```19 #define GET_TICK()``` according to your platform.
 
 In ```main.c``` right before the ```int main(void)```  do the following.
 Create some callback functions you like to run.
