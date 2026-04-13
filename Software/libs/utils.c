@@ -21,16 +21,20 @@ void myprintf(const char *fmt, ...) {
 
 #endif
 
-uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string) {
+uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string, size_t hex_string_size) {
+	/* Bounds check: output buffer must hold at least 2*buffer_size + 1 bytes */
+	if (hex_string_size < 2 * buffer_size + 1) {
+		return 0;
+	}
 	uint32_t bytes_written = 0;
 	for (uint_fast32_t i = 0; i < buffer_size; i++) {
-		bytes_written += sprintf(hex_string + 2 * i, "%02X", buffer[i]);
+		/* snprintf to prevent buffer overrun */
+		bytes_written += snprintf(hex_string + 2 * i, hex_string_size - 2 * i, "%02X", buffer[i]);
 	}
 	hex_string[2 * buffer_size] = '\0';
 
 	return bytes_written + 1;
 }
-
 
 #ifdef PLATFORM_HAS_I2C
 void scan_i2c_sensors(void) {

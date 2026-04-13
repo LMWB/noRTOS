@@ -20,7 +20,7 @@ void myprintf(const char *fmt, ...);
 /**
  *
  */
-uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string);
+uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string, size_t hex_string_size);
 
 /**
  *

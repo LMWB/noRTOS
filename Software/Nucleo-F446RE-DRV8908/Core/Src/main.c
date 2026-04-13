@@ -35,8 +35,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//#include "drv8908.h"
 #include "Drivers/DRV8908/drv8908.h"
+#include "platformGlue.h"
 
 /* USER CODE END Includes */
 
@@ -118,7 +118,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  drv8908_demo();
+	  //drv8908_demo();
+	  drv8908_state_machine();
+	  DELAY(300);
   }
   /* USER CODE END 3 */
 }

@@ -59,7 +59,7 @@
 #define I2C_HANDLER 				        		hi2c1
 #define I2C_GAS_SENSOR                  			I2C1_HANDLER
 #define I2C_INSTANCE				        		I2C1
-#define IS_I2C_DEVICE_READY(dev_address)    		HAL_I2C_IsDeviceReady(&I2C_HANDLER, dev_address, 1, 100)
+#define I2C_IS_DEVICE_READY(dev_address)    		HAL_I2C_IsDeviceReady(&I2C_HANDLER, dev_address, 1, 100)
 #endif
 
 /* *** SPI ********************************************************************/
