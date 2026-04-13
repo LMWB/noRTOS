@@ -72,22 +72,22 @@ int32_t exponential_avaraging_int32(int32_t new_value) {
  z = 0.556083 + j -0.289524
  z = 0.556083 + j 0.289524
  ***************************************************************/
-#define Ntap 15
+#define FIR_INT16_NTAP 15
 #define DCgain 131072
 
 int16_t fir_int16(int16_t NewSample) {
-	int16_t FIRCoef[Ntap] = { -306, 1, 1032, 3430, 7961, 15266, 23994, 28309,
+	int16_t FIRCoef[FIR_INT16_NTAP] = { -306, 1, 1032, 3430, 7961, 15266, 23994, 28309,
 			23994, 15266, 7961, 3430, 1032, 1, -306 };
-	static int16_t x[Ntap]; //input samples
+	static int16_t x[FIR_INT16_NTAP]; //input samples
 	int32_t y = 0;          //output sample
 	int16_t n;
 	//shift the old samples
-	for (n = Ntap - 1; n > 0; n--) {
+	for (n = FIR_INT16_NTAP - 1; n > 0; n--) {
 		x[n] = x[n - 1];
 	}
 	//Calculate the new output
 	x[0] = NewSample;
-	for (n = 0; n < Ntap; n++) {
+	for (n = 0; n < FIR_INT16_NTAP; n++) {
 		y += FIRCoef[n] * x[n];
 	}
 	return (y / DCgain);
@@ -117,9 +117,9 @@ int16_t fir_int16(int16_t NewSample) {
  z = 0.570481 + j -0.349073
  z = 0.570481 + j 0.349073
  ***************************************************************/
-#define Ntap 15
+#define FIR_FLOAT_NTAP 15
 float fir_float(float NewSample) {
-	float FIRCoef[Ntap] = { -0.00302545400812832470, 0.00050546323844514475,
+	float FIRCoef[FIR_FLOAT_NTAP] = { -0.00302545400812832470, 0.00050546323844514475,
 			0.01123575532269642300, 0.03361348520434432500,
 			0.07094203156708520100, 0.12122527483689413000,
 			0.16996497926519682000, 0.19107692914693272000,
@@ -128,21 +128,44 @@ float fir_float(float NewSample) {
 			0.01123575532269642300, 0.00050546323844514475,
 			-0.00302545400812832470 };
 
-	static float x[Ntap]; //input samples
+	static float x[FIR_FLOAT_NTAP]; //input samples
 	float y = 0;          //output sample
 	int16_t n;
 	//shift the old samples
-	for (n = Ntap - 1; n > 0; n--) {
+	for (n = FIR_FLOAT_NTAP - 1; n > 0; n--) {
 		x[n] = x[n - 1];
 	}
 	//Calculate the new output
 	x[0] = NewSample;
-	for (n = 0; n < Ntap; n++) {
+	for (n = 0; n < FIR_FLOAT_NTAP; n++) {
 		y += FIRCoef[n] * x[n];
 	}
 	return y;
 }
 
-void test(void){
+/* Struct-based exponential averaging — reentrant, supports multiple filter instances */
+
+void exp_avg_i32_init(ExpAvg_i32_State *s, int32_t alpha, int32_t full_scale){
+	s->last_y = 0;
+	s->alpha = alpha;
+	s->alpha_complement = full_scale - alpha;
+	s->full_scale = full_scale;
+}
+
+int32_t exp_avg_i32_update(ExpAvg_i32_State *s, int32_t new_value){
+	int32_t y = ((s->alpha * new_value) + (s->alpha_complement * s->last_y)) / s->full_scale;
+	s->last_y = y;
+	return y;
+}
+
+void exp_avg_f32_init(ExpAvg_f32_State *s, float alpha){
+	s->last_y = 0.0f;
+	s->alpha = alpha;
+}
+
+float exp_avg_f32_update(ExpAvg_f32_State *s, float new_value){
+	float y = new_value * s->alpha + s->last_y * (1.0f - s->alpha);
+	s->last_y = y;
+	return y;
 }
 
