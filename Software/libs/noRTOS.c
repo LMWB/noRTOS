@@ -88,7 +88,7 @@ bool noRTOS_wait_for_event(interrupt_bit_mask event_type) {
 
 
 void noRTOS_print_version(void){
-	printf("booting from noRTOS Version: %d.%d\n", NORTOS_VERSION_MAYOR, NORTOS_VERSION_MINOR);
+	printf("booting from noRTOS Version: %d.%d\n", NORTOS_VERSION_MAJOR, NORTOS_VERSION_MINOR);
 }
 
 void noRTOS_print_active_task_running(void){

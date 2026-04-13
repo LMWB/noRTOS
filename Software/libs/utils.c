@@ -173,12 +173,14 @@ uint8_t set_gmtime_stm32(struct tm *time) {
 }
 #endif
 
+#ifdef PLATFORM_STM32F446
 // helper to start stop cpu cycle counter
 void DWT_Init(void) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // activate Trace
     DWT->CYCCNT = 0;                                // reset counter
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            // start counter
 }
+#endif
 
 // example code
 //void check_performance(void ) {
