@@ -2,8 +2,6 @@
 #include "platformGlue.h"
 #include <string.h>
 
-
-
 /* override this with your implementation */
 __weak void noRTOS_setup(void){
 	;
@@ -88,7 +86,10 @@ bool noRTOS_wait_for_event(interrupt_bit_mask event_type) {
 
 
 void noRTOS_print_version(void){
-	printf("booting from noRTOS Version: %d.%d\n", NORTOS_VERSION_MAJOR, NORTOS_VERSION_MINOR);
+	printf("\n booting from noRTOS Version: %d.%d\n", NORTOS_VERSION_MAJOR, NORTOS_VERSION_MINOR);
+#ifdef PLATFORM_SAVE_ENERGY
+		printf("\n running scheduler with sleep mode enabled\n");
+#endif
 }
 
 void noRTOS_print_active_task_running(void){
@@ -176,7 +177,7 @@ void noRTOS_run_scheduler(void) {
 				global_list_of_tasks[i]->task_callback();
 			}
 		}
-#ifndef PLATFORM_SAVE_ENERGIE
+#ifdef PLATFORM_SAVE_ENERGY
 		__WFI();
 #endif
 	}
