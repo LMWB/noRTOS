@@ -14,6 +14,8 @@
 #define PLATFORM_HAS_USB
 //#define PLATFORM_HAS_DAC
 
+//#define PLATFORM_SAVE_ENERGY // in scheduler loop sleep instead of pull for sys-tick
+
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"
 

@@ -51,22 +51,22 @@ __weak void noRTOS_RESERVED_IRQ(void){
 
 noRTOS_task_t *global_list_of_tasks[NORTOS_NO_OF_MAX_TASK];
 static uint32_t number_of_active_task = 0;
-static uint8_t noRTOS_interrupt_flag = 0;
-static uint8_t noRTOS_event_flag = 0;
+static volatile uint8_t noRTOS_interrupt_flag = 0;
+static volatile uint8_t noRTOS_event_flag = 0;
 
 /* (private) local getter / setter */
-static void set_bit_in_byte(const uint8_t bit, uint8_t* byte){
+static void set_bit_in_byte(const uint8_t bit, volatile uint8_t* byte){
 	*byte |= bit;
 }
 
-static void clear_bit_in_byte(const uint8_t bit, uint8_t* byte){
+static void clear_bit_in_byte(const uint8_t bit, volatile uint8_t* byte){
 	*byte &= ~bit;
 }
 
 // preparation in case we need it one time
-//static void clear_all_bits_in_byte(uint8_t* byte){
-//	*byte = 0;
-//}
+static void clear_all_bits_in_byte(volatile uint8_t* byte){
+	*byte = 0;
+}
 
 /* public */
 void noRTOS_set_interrupt_received_flag(interrupt_bit_mask event_type){
@@ -106,7 +106,7 @@ bool noRTOS_add_task_to_scheduler(noRTOS_task_t *task){
 
 
 /*
- * this methods operates the INCOMMING interrupt callback routines
+ * this methods operates the INCOMING interrupt callback routines
  * it been called from noRTOS scheduler
  * */
 static void noRTOS_run_always(void) {
@@ -153,6 +153,9 @@ static void noRTOS_run_always(void) {
 }
 
 void noRTOS_run_scheduler(void) {
+	// init the interrupt and event flags to zero
+	clear_all_bits_in_byte( &noRTOS_interrupt_flag );
+	clear_all_bits_in_byte( &noRTOS_event_flag );
 
 	noRTOS_print_version();
 	noRTOS_print_active_task_running();
@@ -173,5 +176,8 @@ void noRTOS_run_scheduler(void) {
 				global_list_of_tasks[i]->task_callback();
 			}
 		}
+#ifndef PLATFORM_SAVE_ENERGIE
+		__WFI();
+#endif
 	}
 }
