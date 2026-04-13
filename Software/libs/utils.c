@@ -124,11 +124,17 @@ time_t cvt_asctime(const char *linux_asctime_str, struct tm *time) {
 	char buffer_day[5];
 	char buffer_month[5];
 
-	sscanf(linux_asctime_str, "%s %s %2d %2d:%2d:%2d %4d", buffer_day,
+	/* Limit %s field widths to 4 chars to prevent overflow of buffer_day[5] / buffer_month[5] */
+	sscanf(linux_asctime_str, "%4s %4s %2d %2d:%2d:%2d %4d", buffer_day,
 		   buffer_month, &day, &hour, &minutes, &seconds, &year);
 
 	// Find where is s_month in month_names. Deduce month value.
 
+	/* Null-check strstr result to prevent undefined behavior on unrecognized input */
+	const char *month_ptr = strstr(MONTH_NAMES, buffer_month);
+	if (month_ptr == NULL) {
+		return 0;
+	}
 	month = (strstr(MONTH_NAMES, buffer_month) - MONTH_NAMES) / 3;
 
 	t.tm_year = year - 1900;
@@ -139,8 +145,13 @@ time_t cvt_asctime(const char *linux_asctime_str, struct tm *time) {
 	t.tm_min = minutes;
 	t.tm_sec = seconds;
 
-	// not that important
-	t.tm_wday = (strstr(WEEK_NAMES, buffer_day) - WEEK_NAMES) / 3;
+	/* Null-check strstr result for weekday lookup */
+	const char *wday_ptr = strstr(WEEK_NAMES, buffer_day);
+	if (wday_ptr == NULL) {
+		t.tm_wday = 0;
+	} else {
+		t.tm_wday = (wday_ptr - WEEK_NAMES) / 3;
+	}
 
 	/* return value for param 1 */
 	time->tm_year = t.tm_year;
