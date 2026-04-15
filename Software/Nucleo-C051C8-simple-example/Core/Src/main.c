@@ -26,6 +26,8 @@
 
 #include "noRTOS.h"
 
+#include "fifo.h"
+
 void noRTOS_DIGITAL_INPUT_IRQ(void){
 	printf("Hardware Interrupt: Button Pressed\n");
 }
