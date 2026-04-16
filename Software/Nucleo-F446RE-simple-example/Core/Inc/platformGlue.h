@@ -3,13 +3,15 @@
 
 #define PLATFORM_STM32F446
 
-//#define PLATFORM_HAS_UART
+#define PLATFORM_HAS_UART
 //#define PLATFORM_HAS_TIMER
 //#define PLATFORM_HAS_I2C
 //#define PLATFORM_HAS_SPI
 //#define PLATFORM_HAS_WATCHDOG
 //#define PLATFORM_HAS_CAN
-//#define PLATFORM_HAS_R
+//#define PLATFORM_HAS_RTC
+
+#define PLATFORM_SAVE_ENERGY // in scheduler loop sleep instead of pull for sys-tick
 
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"

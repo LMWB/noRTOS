@@ -9,7 +9,7 @@
 //#define PLATFORM_HAS_SPI
 //#define PLATFORM_HAS_WATCHDOG
 //#define PLATFORM_HAS_CAN
-//#define PLATFORM_HAS_R
+//#define PLATFORM_HAS_RTC
 
 #include "main.h" // -> includes "stm32f4xx_hal.h" and all drivers
 #include "gpio.h"

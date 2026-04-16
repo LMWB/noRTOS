@@ -358,7 +358,7 @@ void build_display_content(void) {
 		ssd1306_WriteString(msg, Font_7x10, White);
 
 		ssd1306_SetCursor(1, 3 * line_hight);
-		sprintf(msg, "noRTOS V.%d.%d", NORTOS_VERSION_MAYOR, NORTOS_VERSION_MINOR);
+		sprintf(msg, "noRTOS V.%d.%d", NORTOS_VERSION_MAJOR, NORTOS_VERSION_MINOR);
 		ssd1306_WriteString(msg, Font_7x10, White);
 		break;
 	case 1:

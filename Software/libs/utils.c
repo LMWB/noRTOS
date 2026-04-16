@@ -21,16 +21,20 @@ void myprintf(const char *fmt, ...) {
 
 #endif
 
-uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string) {
+uint32_t raw_buffer_to_hex_string(const uint8_t *buffer, size_t buffer_size, char *hex_string, size_t hex_string_size) {
+	/* Bounds check: output buffer must hold at least 2*buffer_size + 1 bytes */
+	if (hex_string_size < 2 * buffer_size + 1) {
+		return 0;
+	}
 	uint32_t bytes_written = 0;
 	for (uint_fast32_t i = 0; i < buffer_size; i++) {
-		bytes_written += sprintf(hex_string + 2 * i, "%02X", buffer[i]);
+		/* snprintf to prevent buffer overrun */
+		bytes_written += snprintf(hex_string + 2 * i, hex_string_size - 2 * i, "%02X", buffer[i]);
 	}
 	hex_string[2 * buffer_size] = '\0';
 
 	return bytes_written + 1;
 }
-
 
 #ifdef PLATFORM_HAS_I2C
 void scan_i2c_sensors(void) {
@@ -120,11 +124,17 @@ time_t cvt_asctime(const char *linux_asctime_str, struct tm *time) {
 	char buffer_day[5];
 	char buffer_month[5];
 
-	sscanf(linux_asctime_str, "%s %s %2d %2d:%2d:%2d %4d", buffer_day,
+	/* Limit %s field widths to 4 chars to prevent overflow of buffer_day[5] / buffer_month[5] */
+	sscanf(linux_asctime_str, "%4s %4s %2d %2d:%2d:%2d %4d", buffer_day,
 		   buffer_month, &day, &hour, &minutes, &seconds, &year);
 
 	// Find where is s_month in month_names. Deduce month value.
 
+	/* Null-check strstr result to prevent undefined behavior on unrecognized input */
+	const char *month_ptr = strstr(MONTH_NAMES, buffer_month);
+	if (month_ptr == NULL) {
+		return 0;
+	}
 	month = (strstr(MONTH_NAMES, buffer_month) - MONTH_NAMES) / 3;
 
 	t.tm_year = year - 1900;
@@ -135,8 +145,13 @@ time_t cvt_asctime(const char *linux_asctime_str, struct tm *time) {
 	t.tm_min = minutes;
 	t.tm_sec = seconds;
 
-	// not that important
-	t.tm_wday = (strstr(WEEK_NAMES, buffer_day) - WEEK_NAMES) / 3;
+	/* Null-check strstr result for weekday lookup */
+	const char *wday_ptr = strstr(WEEK_NAMES, buffer_day);
+	if (wday_ptr == NULL) {
+		t.tm_wday = 0;
+	} else {
+		t.tm_wday = (wday_ptr - WEEK_NAMES) / 3;
+	}
 
 	/* return value for param 1 */
 	time->tm_year = t.tm_year;
@@ -173,12 +188,14 @@ uint8_t set_gmtime_stm32(struct tm *time) {
 }
 #endif
 
+#ifdef PLATFORM_STM32F446
 // helper to start stop cpu cycle counter
 void DWT_Init(void) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // activate Trace
     DWT->CYCCNT = 0;                                // reset counter
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            // start counter
 }
+#endif
 
 // example code
 //void check_performance(void ) {

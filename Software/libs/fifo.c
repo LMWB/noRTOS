@@ -3,12 +3,13 @@
 
 
 void fifo_init(fifo_t* fifo){
-
+	fifo_clear(fifo);
 }
 
 void fifo_clear(fifo_t* fifo){
 	fifo->head = 0;
 	fifo->tail = 0;
+	fifo->overflow = false;
 	memset((char*) fifo->buffer, '\0', FIFO_BUFFER_SIZE);
 }
 
@@ -36,9 +37,18 @@ static void increment_tail(fifo_t *fifo) {
 	}
 }
 
-void fifo_put_byte(fifo_t* fifo, uint8_t byte){
+bool fifo_is_full(fifo_t* fifo){
+	return (get_fill_level(fifo) >= (FIFO_BUFFER_SIZE - 1));
+}
+
+bool fifo_put_byte(fifo_t* fifo, uint8_t byte){
+	if(fifo_is_full(fifo)){
+		fifo->overflow = true;
+		return false;
+	}
 	fifo->buffer[fifo->head] = byte;
 	increment_head(fifo);
+	return true;
 }
 
 uint8_t fifo_pop_byte(fifo_t* fifo){
@@ -49,13 +59,4 @@ uint8_t fifo_pop_byte(fifo_t* fifo){
 		return byte;
 	}
 	return 0;
-}
-
-
-void fifo_put_string(fifo_t* fifo, uint8_t* string){
-	;
-}
-
-uint8_t* fifo_pop_string(fifo_t* fifo){
-	return NULL;
 }
